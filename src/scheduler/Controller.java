@@ -1,11 +1,10 @@
 package scheduler;
 
+import com.mysql.cj.xdevapi.Table;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -67,7 +66,7 @@ public class Controller {
 
     /**
      *
-     * @param UserID an Integer to look up the schedule with!
+     * @param UserID an Integer to look up the schedule with
      * @return A ResultSet with the User's schedule
      */
     public static ResultSet getSchedule (int UserID){
@@ -99,10 +98,87 @@ public class Controller {
         return scheduleResult;
     }
 
-    public static ObservableList<Schedule> resultToList(ResultSet resultSet){
-        ObservableList<Schedule> userSchedule = FXCollections.observableArrayList(
+    public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException {
+        ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
+        while(resultSet.next()){
+            Schedule scheduleRow = new Schedule(
+                    resultSet.getInt("Appointment_ID"),
+                    resultSet.getString("Appointment_Title"),
+                    resultSet.getString("Appointment_Description"),
+                    resultSet.getString("Appointment_Location"),
+                    resultSet.getString("Contact"),
+                    resultSet.getString("Appointment_Type"),
+                    resultSet.getString("Appointment_Start"),
+                    resultSet.getString("Appointment_End"),
+                    resultSet.getInt("Customer_ID"),
+                    resultSet.getInt("User_ID")
+            );
+            scheduleList.add(scheduleRow);
+        }
+        return scheduleList;
+    }
+    public static TableView<Schedule> generateScheduleTable(){
+        TableView <Schedule> apptTable = new TableView<>();
 
-        );
-        return userSchedule;
+        TableColumn apptTitle = new TableColumn("Appointment Title");
+        apptTitle.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptTitle"));
+
+        TableColumn apptDescription = new TableColumn("Appointment Description");
+        apptDescription.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptDescription"));
+
+        TableColumn apptLocation = new TableColumn("Appointment Location");
+        apptLocation.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptLocation"));
+
+        return apptTable;
+    }
+/*    public static void updateScheduleTable(TableView tableView){
+
+    }*/
+    public static ResultSet getCustomers(){
+        String customerQuery =
+        """
+        SELECT
+            customers.Customer_ID,
+            customers.Customer_Name,
+            customers.Phone,
+            customers.Address,
+            first_level_divisions.Division,
+            countries.Country,
+            customers.Postal_Code
+        FROM
+            customers
+            INNER JOIN first_level_divisions on customers.Division_ID = first_level_divisions.Division_ID
+                INNER JOIN countries on first_level_divisions.Country_ID = countries.Country_ID;
+        """;
+
+        try {
+            JDBC.makePreparedStatement(customerQuery, JDBC.getConnection());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        PreparedStatement customerStmt = null;
+        try {
+            customerStmt = JDBC.getPreparedStatement();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        ResultSet customerResult = null;
+        try {
+            assert customerStmt != null;
+            customerResult = customerStmt.executeQuery();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        return customerResult;
+    }
+
+    public static void fillCustomers(ResultSet resultSet, TableView tableView) throws SQLException {
+        while(resultSet.next()){
+            TableRow row = new TableRow();
+            tableView.getItems().add(row);
+
+        }
     }
 }

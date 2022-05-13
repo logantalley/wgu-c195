@@ -4,6 +4,7 @@ import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -25,6 +26,13 @@ public class Main extends Application {
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Password");
         Button loginButton = new Button("Login");
+
+
+
+
+        /*ResultSet customerResult = Controller.getCustomers();
+        TableView customerTable = Controller.generateTable(customerResult);*/
+
 
         loginButton.setOnAction(e -> {
             int UserIDRes = Controller.loginButtonHandler(usernameField, passwordField);

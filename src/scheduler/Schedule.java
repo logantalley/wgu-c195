@@ -13,11 +13,11 @@ public class Schedule {
     private String apptLocation;
     private String apptContact;
     private String apptType;
-    private LocalDateTime apptStart;
-    private LocalDateTime apptEnd;
+    private String apptStart;
+    private String apptEnd;
     private int customerID;
     private int userID;
-    public Schedule(int apptID, String apptTitle, String apptDescription, String apptLocation, String apptContact, String apptType, LocalDateTime apptStart, LocalDateTime apptEnd, int customerID, int userID){
+    public Schedule(int apptID, String apptTitle, String apptDescription, String apptLocation, String apptContact, String apptType, String apptStart, String apptEnd, int customerID, int userID){
         this.apptID = apptID;
         this.apptTitle = apptTitle;
         this.apptDescription = apptDescription;
