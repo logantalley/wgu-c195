@@ -2,6 +2,7 @@ package scheduler;
 
 import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import javafx.application.Application;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -26,6 +27,8 @@ public class Main extends Application {
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Password");
         Button loginButton = new Button("Login");
+        TableView scheduleTable = Controller.generateScheduleTable();
+
 
 
 
@@ -38,6 +41,19 @@ public class Main extends Application {
             int UserIDRes = Controller.loginButtonHandler(usernameField, passwordField);
             if (UserIDRes != -1){
                 ResultSet userSchedule = Controller.getSchedule(UserIDRes);
+                try {
+                    ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
+                    Controller.updateScheduleTable(scheduleTable, userList);
+                    Stage userScheduleStage = new Stage();
+                    AnchorPane userSchedPane = new AnchorPane();
+                    userSchedPane.getChildren().add(scheduleTable);
+                    Scene userSchedScene = new Scene(userSchedPane, 850, 250);
+                    userScheduleStage.setScene(userSchedScene);
+                    userScheduleStage.setTitle("Schedule");
+                    userScheduleStage.show();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
             }
         });
         root.getChildren().addAll(usernameField, passwordField, loginButton);

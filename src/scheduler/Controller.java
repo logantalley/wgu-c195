@@ -70,7 +70,9 @@ public class Controller {
      * @return A ResultSet with the User's schedule
      */
     public static ResultSet getSchedule (int UserID){
-        String scheduleQuery = "select * from appointments where User_ID = ?;";
+        String scheduleQuery = """
+                select * from appointments where User_ID = ?;
+                """;
         try {
             JDBC.makePreparedStatement(scheduleQuery, JDBC.getConnection());
         } catch (SQLException throwables) {
@@ -120,6 +122,9 @@ public class Controller {
     public static TableView<Schedule> generateScheduleTable(){
         TableView <Schedule> apptTable = new TableView<>();
 
+        TableColumn apptID = new TableColumn("Appointment ID");
+        apptID.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptID"));
+
         TableColumn apptTitle = new TableColumn("Appointment Title");
         apptTitle.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptTitle"));
 
@@ -129,11 +134,44 @@ public class Controller {
         TableColumn apptLocation = new TableColumn("Appointment Location");
         apptLocation.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptLocation"));
 
+        TableColumn apptContact = new TableColumn("Appointment Contact");
+        apptContact.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptContact"));
+
+        TableColumn apptType = new TableColumn("Appointment Type");
+        apptType.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptType"));
+
+        TableColumn apptStart = new TableColumn("Appointment Start");
+        apptStart.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptStart"));
+
+        TableColumn apptEnd = new TableColumn("Appointment End");
+        apptEnd.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptEnd"));
+
+        /* Dog, we might need to change these!
+
+         */
+        TableColumn customerID = new TableColumn("Customer ID");
+        customerID.setCellValueFactory(new PropertyValueFactory<Schedule, String>("customerID"));
+
+        TableColumn userID = new TableColumn("User ID");
+        customerID.setCellValueFactory(new PropertyValueFactory<Schedule, String>("userID"));
+
+        apptTable.getColumns().addAll(
+                apptID,
+                apptTitle,
+                apptDescription,
+                apptLocation,
+                apptContact,
+                apptType,
+                apptStart,
+                apptEnd,
+                customerID,
+                userID);
+
         return apptTable;
     }
-/*    public static void updateScheduleTable(TableView tableView){
-
-    }*/
+   public static void updateScheduleTable(TableView tableView, ObservableList obsList){
+        tableView.setItems(obsList);
+    }
     public static ResultSet getCustomers(){
         String customerQuery =
         """
