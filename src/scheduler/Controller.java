@@ -17,7 +17,7 @@ public class Controller {
      * @param passwordField passed as an input from the Login screen
      * @return An integer, either the matching UserID, or else -1, for error catching
      */
-    public static int loginButtonHandler(TextField usernameField, PasswordField passwordField){
+    public static int loginButtonHandler(TextField usernameField, PasswordField passwordField, Alert alert){
         String loginQuery = "select User_ID from users where User_Name = ? and Password = ?;";
         try {
             JDBC.makePreparedStatement(loginQuery, JDBC.getConnection());
@@ -55,7 +55,6 @@ public class Controller {
 
 
             }else{
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
                 alert.showAndWait();
             }
         } catch (SQLException throwables) {
@@ -99,7 +98,12 @@ public class Controller {
 
         return scheduleResult;
     }
-
+    public static String getUserLocale(){
+        String userCountry = System.getProperty("user.country");
+        String userLang = System.getProperty("user.language");
+        String userLocale = userCountry + userLang;
+        return userLocale;
+    }
     public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
         while(resultSet.next()){

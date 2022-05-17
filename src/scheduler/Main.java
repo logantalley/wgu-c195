@@ -22,11 +22,33 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         AnchorPane root = new AnchorPane();
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
         PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        Button loginButton = new Button("Login");
+        TextField usernameField = new TextField();
+        Button loginButton = new Button();
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
+        String userLocale = Controller.getUserLocale();
+
+        Label zoneLabel = new Label(userLocale);
+
+
+/*        String userLocale = "CAfr";*/
+        if (userLocale.equals("CAfr")) {
+            usernameField.setPromptText("Nom d'utilisateur");
+            passwordField.setPromptText("Le mot de passe");
+            loginButton.setText("Connexion");
+            primaryStage.setTitle("Planificateur");
+            alert.setContentText("Mauvais combo nom d'utilisateur/mot de passe !");
+            alert.setTitle("ERREUR");
+
+        }else{
+            usernameField.setPromptText("Username");
+            passwordField.setPromptText("Password");
+            loginButton.setText("Login");
+            primaryStage.setTitle("Scheduler");
+        }
+
+        System.out.println(userLocale);
+
         TableView scheduleTable = Controller.generateScheduleTable();
 
 
@@ -38,7 +60,7 @@ public class Main extends Application {
 
 
         loginButton.setOnAction(e -> {
-            int UserIDRes = Controller.loginButtonHandler(usernameField, passwordField);
+            int UserIDRes = Controller.loginButtonHandler(usernameField, passwordField, alert);
             if (UserIDRes != -1){
                 ResultSet userSchedule = Controller.getSchedule(UserIDRes);
                 try {
@@ -56,7 +78,9 @@ public class Main extends Application {
                 }
             }
         });
-        root.getChildren().addAll(usernameField, passwordField, loginButton);
+        root.getChildren().addAll(usernameField, passwordField, loginButton, zoneLabel);
+        AnchorPane.setRightAnchor(zoneLabel, 10d);
+        AnchorPane.setBottomAnchor(zoneLabel, 10d);
         AnchorPane.setBottomAnchor(loginButton, 50d);
         AnchorPane.setTopAnchor(usernameField, 10d);
         AnchorPane.setTopAnchor(passwordField, 40d);
@@ -66,7 +90,7 @@ public class Main extends Application {
         AnchorPane.setRightAnchor(passwordField, 20d);
         AnchorPane.setLeftAnchor(loginButton, 30d);
         AnchorPane.setRightAnchor(loginButton, 30d);
-        primaryStage.setTitle("Scheduler");
+
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
     }
