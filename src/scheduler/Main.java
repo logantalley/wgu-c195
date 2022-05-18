@@ -50,6 +50,7 @@ public class Main extends Application {
         System.out.println(userLocale);
 
         TableView scheduleTable = Controller.generateScheduleTable();
+        TableView customerTable = Controller.generateCustomerTable();
 
 
 
@@ -65,7 +66,7 @@ public class Main extends Application {
                 ResultSet userSchedule = Controller.getSchedule(UserIDRes);
                 try {
                     ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
-                    Controller.updateScheduleTable(scheduleTable, userList);
+                    Controller.updateTable(scheduleTable, userList);
                     Stage userScheduleStage = new Stage();
                     AnchorPane userSchedPane = new AnchorPane();
                     userSchedPane.getChildren().add(scheduleTable);

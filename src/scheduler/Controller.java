@@ -70,7 +70,22 @@ public class Controller {
      */
     public static ResultSet getSchedule (int UserID){
         String scheduleQuery = """
-                select * from appointments where User_ID = ?;
+                SELECT
+                    Appointment_ID,
+                    Title,
+                    Description,
+                    Location,
+                    contacts.Contact_Name as Contact,
+                    Type,
+                    Start,
+                    End,
+                    Customer_ID,
+                    User_ID
+                FROM
+                    appointments
+                    INNER JOIN contacts on appointments.Contact_ID = contacts.Contact_ID
+                WHERE
+                    User_ID = ?;
                 """;
         try {
             JDBC.makePreparedStatement(scheduleQuery, JDBC.getConnection());
@@ -109,13 +124,13 @@ public class Controller {
         while(resultSet.next()){
             Schedule scheduleRow = new Schedule(
                     resultSet.getInt("Appointment_ID"),
-                    resultSet.getString("Appointment_Title"),
-                    resultSet.getString("Appointment_Description"),
-                    resultSet.getString("Appointment_Location"),
+                    resultSet.getString("Title"),
+                    resultSet.getString("Description"),
+                    resultSet.getString("Location"),
                     resultSet.getString("Contact"),
-                    resultSet.getString("Appointment_Type"),
-                    resultSet.getString("Appointment_Start"),
-                    resultSet.getString("Appointment_End"),
+                    resultSet.getString("Type"),
+                    resultSet.getString("Start"),
+                    resultSet.getString("End"),
                     resultSet.getInt("Customer_ID"),
                     resultSet.getInt("User_ID")
             );
@@ -126,38 +141,36 @@ public class Controller {
     public static TableView<Schedule> generateScheduleTable(){
         TableView <Schedule> apptTable = new TableView<>();
 
-        TableColumn apptID = new TableColumn("Appointment ID");
-        apptID.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptID"));
+        TableColumn apptID = new TableColumn("ID");
+        apptID.setCellValueFactory(new PropertyValueFactory<Schedule, Integer>("apptID"));
 
-        TableColumn apptTitle = new TableColumn("Appointment Title");
+        TableColumn apptTitle = new TableColumn("Title");
         apptTitle.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptTitle"));
 
-        TableColumn apptDescription = new TableColumn("Appointment Description");
+        TableColumn apptDescription = new TableColumn("Description");
         apptDescription.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptDescription"));
 
-        TableColumn apptLocation = new TableColumn("Appointment Location");
+        TableColumn apptLocation = new TableColumn("Location");
         apptLocation.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptLocation"));
 
-        TableColumn apptContact = new TableColumn("Appointment Contact");
+        TableColumn apptContact = new TableColumn("Contact");
         apptContact.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptContact"));
 
-        TableColumn apptType = new TableColumn("Appointment Type");
+        TableColumn apptType = new TableColumn("Type");
         apptType.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptType"));
 
-        TableColumn apptStart = new TableColumn("Appointment Start");
+        TableColumn apptStart = new TableColumn("Start");
         apptStart.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptStart"));
 
-        TableColumn apptEnd = new TableColumn("Appointment End");
+        TableColumn apptEnd = new TableColumn("End");
         apptEnd.setCellValueFactory(new PropertyValueFactory<Schedule, String>("apptEnd"));
 
-        /* Dog, we might need to change these!
-
-         */
         TableColumn customerID = new TableColumn("Customer ID");
-        customerID.setCellValueFactory(new PropertyValueFactory<Schedule, String>("customerID"));
+        customerID.setCellValueFactory(new PropertyValueFactory<Schedule, Integer>("customerID"));
 
         TableColumn userID = new TableColumn("User ID");
-        customerID.setCellValueFactory(new PropertyValueFactory<Schedule, String>("userID"));
+        userID.setCellValueFactory(new PropertyValueFactory<Schedule, Integer>("userID"));
+
 
         apptTable.getColumns().addAll(
                 apptID,
@@ -169,11 +182,12 @@ public class Controller {
                 apptStart,
                 apptEnd,
                 customerID,
-                userID);
+                userID
+                );
 
         return apptTable;
     }
-   public static void updateScheduleTable(TableView tableView, ObservableList obsList){
+   public static void updateTable(TableView tableView, ObservableList obsList){
         tableView.setItems(obsList);
     }
     public static ResultSet getCustomers(){
@@ -216,11 +230,58 @@ public class Controller {
         return customerResult;
     }
 
-    public static void fillCustomers(ResultSet resultSet, TableView tableView) throws SQLException {
-        while(resultSet.next()){
-            TableRow row = new TableRow();
-            tableView.getItems().add(row);
 
+    public static ObservableList<Customer> generateCustomerList(ResultSet resultSet) throws SQLException {
+        ObservableList<Customer> customerList = FXCollections.observableArrayList();
+        while(resultSet.next()){
+            Customer customerRow = new Customer(
+                    resultSet.getInt("Customer_ID"),
+                    resultSet.getString("Customer_Name"),
+                    resultSet.getString("Phone"),
+                    resultSet.getString("Address"),
+                    resultSet.getString("Division"),
+                    resultSet.getString("Country"),
+                    resultSet.getInt("Postal_Code")
+            );
+            customerList.add(customerRow);
         }
+        return customerList;
+    }
+    public static TableView<Customer> generateCustomerTable(){
+        TableView <Customer> customerTable = new TableView<>();
+
+        TableColumn customerID = new TableColumn("Customer ID");
+        customerID.setCellValueFactory(new PropertyValueFactory<Customer, Integer>("customerID"));
+
+        TableColumn customerName = new TableColumn("Customer Name");
+        customerName.setCellValueFactory(new PropertyValueFactory<Customer, String>("customerName"));
+
+        TableColumn customerPhone = new TableColumn("Customer Phone");
+        customerPhone.setCellValueFactory(new PropertyValueFactory<Customer, String>("customerPhone"));
+
+        TableColumn customerAddress = new TableColumn("Customer Address");
+        customerAddress.setCellValueFactory(new PropertyValueFactory<Customer, String>("customerAddress"));
+
+        TableColumn customerDivision = new TableColumn("Customer Division");
+        customerDivision.setCellValueFactory(new PropertyValueFactory<Customer, String>("customerDivision"));
+
+        TableColumn customerCountry = new TableColumn("Customer Country");
+        customerCountry.setCellValueFactory(new PropertyValueFactory<Customer, String>("customerCountry"));
+
+        TableColumn customerPostal = new TableColumn("Customer Postal");
+        customerPostal.setCellValueFactory(new PropertyValueFactory<Customer, Integer>("customerPostal"));
+
+
+        customerTable.getColumns().addAll(
+                customerID,
+                customerName,
+                customerPhone,
+                customerAddress,
+                customerDivision,
+                customerCountry,
+                customerPostal
+        );
+
+        return customerTable;
     }
 }
