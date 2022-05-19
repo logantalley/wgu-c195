@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Main extends Application {
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) {
         AtomicBoolean signedInStatus = new AtomicBoolean(false);
         AtomicInteger UserIDRes = new AtomicInteger(-1);
         AnchorPane root = new AnchorPane();
@@ -49,8 +49,8 @@ public class Main extends Application {
 
         System.out.println(userLocale);
 
-        TableView scheduleTable = Controller.generateScheduleTable();
-        TableView customerTable = Controller.generateCustomerTable();
+        TableView<Schedule> scheduleTable = Controller.generateScheduleTable();
+        TableView<Customer> customerTable = Controller.generateCustomerTable();
 
 
 
