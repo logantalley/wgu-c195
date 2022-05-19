@@ -1,18 +1,16 @@
 package scheduler;
 
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -21,6 +19,8 @@ import java.sql.SQLException;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
+        AtomicBoolean signedInStatus = new AtomicBoolean(false);
+        AtomicInteger UserIDRes = new AtomicInteger(-1);
         AnchorPane root = new AnchorPane();
         PasswordField passwordField = new PasswordField();
         TextField usernameField = new TextField();
@@ -59,25 +59,25 @@ public class Main extends Application {
         /*ResultSet customerResult = Controller.getCustomers();
         TableView customerTable = Controller.generateTable(customerResult);*/
 
-
+//        if (UserIDRes != -1){
+//            ResultSet userSchedule = Controller.getSchedule(UserIDRes);
+//            try {
+//                ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
+//                Controller.updateTable(scheduleTable, userList);
+//                Stage userScheduleStage = new Stage();
+//                AnchorPane userSchedPane = new AnchorPane();
+//                userSchedPane.getChildren().add(scheduleTable);
+//                Scene userSchedScene = new Scene(userSchedPane, 850, 250);
+//                userScheduleStage.setScene(userSchedScene);
+//                userScheduleStage.setTitle("Schedule");
+//                userScheduleStage.show();
+//            } catch (SQLException throwables) {
+//                throwables.printStackTrace();
+//            }
+//        }
         loginButton.setOnAction(e -> {
-            int UserIDRes = Controller.loginButtonHandler(usernameField, passwordField, alert);
-            if (UserIDRes != -1){
-                ResultSet userSchedule = Controller.getSchedule(UserIDRes);
-                try {
-                    ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
-                    Controller.updateTable(scheduleTable, userList);
-                    Stage userScheduleStage = new Stage();
-                    AnchorPane userSchedPane = new AnchorPane();
-                    userSchedPane.getChildren().add(scheduleTable);
-                    Scene userSchedScene = new Scene(userSchedPane, 850, 250);
-                    userScheduleStage.setScene(userSchedScene);
-                    userScheduleStage.setTitle("Schedule");
-                    userScheduleStage.show();
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-            }
+            UserIDRes.set(Controller.loginButtonHandler(usernameField, passwordField, alert));
+            signedInStatus.set(true);
         });
         root.getChildren().addAll(usernameField, passwordField, loginButton, zoneLabel);
         AnchorPane.setRightAnchor(zoneLabel, 10d);
