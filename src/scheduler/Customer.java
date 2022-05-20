@@ -1,5 +1,8 @@
 package scheduler;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 public class Customer {
     private int customerID;
     private String customerName;
@@ -8,6 +11,7 @@ public class Customer {
     private String customerDivision;
     private String customerCountry;
     private int customerPostal;
+    private ObservableList<Schedule> customerAppts = FXCollections.observableArrayList();
     public Customer(
             int customerID,
             String customerName,
@@ -15,7 +19,8 @@ public class Customer {
             String customerAddress,
             String customerDivision,
             String customerCountry,
-            int customerPostal
+            int customerPostal,
+            ObservableList<Schedule> customerAppts
     ){
         this.customerID = customerID;
         this.customerName = customerName;
@@ -24,6 +29,7 @@ public class Customer {
         this.customerDivision = customerDivision;
         this.customerCountry = customerCountry;
         this.customerPostal = customerPostal;
+        this.customerAppts = customerAppts;
 
     }
 
@@ -55,4 +61,8 @@ public class Customer {
         return customerPostal;
     }
 
+    public ObservableList<Schedule> getCustomerAppts() {
+        return customerAppts;
+    }
 }
+

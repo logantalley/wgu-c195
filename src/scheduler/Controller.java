@@ -241,7 +241,9 @@ public class Controller {
                     resultSet.getString("Address"),
                     resultSet.getString("Division"),
                     resultSet.getString("Country"),
-                    resultSet.getInt("Postal_Code")
+                    resultSet.getInt("Postal_Code"),
+                    //THIS NEEDS TO BE FILLED WITH CUSTOMER APPTS!!
+                    FXCollections.observableArrayList()
             );
             customerList.add(customerRow);
         }

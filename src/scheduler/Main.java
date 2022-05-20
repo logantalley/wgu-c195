@@ -5,6 +5,9 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.ResultSet;
@@ -19,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
-        AtomicBoolean signedInStatus = new AtomicBoolean(false);
         AtomicInteger UserIDRes = new AtomicInteger(-1);
         AnchorPane root = new AnchorPane();
         PasswordField passwordField = new PasswordField();
@@ -48,36 +50,67 @@ public class Main extends Application {
         }
 
         System.out.println(userLocale);
+        Stage mainMenu = new Stage();
+        Button btnCustomers = new Button();
+        Button btnClose = new Button();
+        Button btnSchedule = new Button();
 
         TableView<Schedule> scheduleTable = Controller.generateScheduleTable();
         TableView<Customer> customerTable = Controller.generateCustomerTable();
 
 
+        Stage userScheduleStage = new Stage();
+        AnchorPane userSchedPane = new AnchorPane();
+        userSchedPane.getChildren().add(scheduleTable);
+        Scene userSchedScene = new Scene(userSchedPane, 850, 250);
+        userScheduleStage.setScene(userSchedScene);
+        userScheduleStage.setTitle("Schedule");
+
+
+        btnSchedule.setOnAction(e -> {
+            userScheduleStage.show();
+        });
+        Button custAddBtn = new Button();
+        Button custModBtn = new Button();
+        Button custDelBtn = new Button();
+
+        HBox custBtnBox = new HBox(5, custAddBtn, custModBtn, custDelBtn);
+
+        AnchorPane partAnchor = new AnchorPane(customerTable, custBtnBox);
+        AnchorPane.setBottomAnchor(custBtnBox, 10d);
+        AnchorPane.setRightAnchor(custBtnBox, 10d);
+        AnchorPane.setTopAnchor(customerTable, 40d);
+        AnchorPane.setBottomAnchor(customerTable, 45d);
+        AnchorPane.setRightAnchor(customerTable, 10d);
+        AnchorPane.setLeftAnchor(customerTable, 10d);
+        Stage customerStage = new Stage();
+        GridPane custGrid = new GridPane();
+        Label custLabel = new Label("Customers");
+        custGrid.add(custLabel, 0, 0, 1,1);
+
+
+        btnCustomers.setOnAction(e -> {
+            customerStage.show();
+        });
 
 
 
         /*ResultSet customerResult = Controller.getCustomers();
         TableView customerTable = Controller.generateTable(customerResult);*/
 
-//        if (UserIDRes != -1){
-//            ResultSet userSchedule = Controller.getSchedule(UserIDRes);
-//            try {
-//                ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
-//                Controller.updateTable(scheduleTable, userList);
-//                Stage userScheduleStage = new Stage();
-//                AnchorPane userSchedPane = new AnchorPane();
-//                userSchedPane.getChildren().add(scheduleTable);
-//                Scene userSchedScene = new Scene(userSchedPane, 850, 250);
-//                userScheduleStage.setScene(userSchedScene);
-//                userScheduleStage.setTitle("Schedule");
-//                userScheduleStage.show();
-//            } catch (SQLException throwables) {
-//                throwables.printStackTrace();
-//            }
-//        }
+
         loginButton.setOnAction(e -> {
             UserIDRes.set(Controller.loginButtonHandler(usernameField, passwordField, alert));
-            signedInStatus.set(true);
+            if (UserIDRes.get() != -1){
+                ResultSet userSchedule = Controller.getSchedule(UserIDRes.get());
+                try {
+                    ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
+                    Controller.updateTable(scheduleTable, userList);
+
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
         });
         root.getChildren().addAll(usernameField, passwordField, loginButton, zoneLabel);
         AnchorPane.setRightAnchor(zoneLabel, 10d);
