@@ -68,7 +68,7 @@ public class Controller {
      * @param UserID an Integer to look up the schedule with
      * @return A ResultSet with the User's schedule
      */
-    public static ResultSet getSchedule (int UserID){
+    public static ResultSet getUserSchedule (int UserID){
         String scheduleQuery = """
                 SELECT
                     Appointment_ID,
@@ -110,7 +110,55 @@ public class Controller {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+        assert scheduleResult != null;
+        //System.out.println(scheduleStmt);
+        return scheduleResult;
+    }
 
+    public static ResultSet getCustomerSchedule (int CustomerID){
+        String scheduleQuery = """
+                SELECT
+                    Appointment_ID,
+                    Title,
+                    Description,
+                    Location,
+                    contacts.Contact_Name as Contact,
+                    Type,
+                    Start,
+                    End,
+                    Customer_ID,
+                    User_ID
+                FROM
+                    appointments
+                    INNER JOIN contacts on appointments.Contact_ID = contacts.Contact_ID
+                WHERE
+                    Customer_ID = ?;
+                """;
+        try {
+            JDBC.makePreparedStatement(scheduleQuery, JDBC.getConnection());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        PreparedStatement scheduleStmt = null;
+        try {
+            scheduleStmt = JDBC.getPreparedStatement();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        try {
+            assert scheduleStmt != null;
+            scheduleStmt.setInt(1, CustomerID);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        ResultSet scheduleResult = null;
+        try {
+            scheduleResult = scheduleStmt.executeQuery();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        assert scheduleResult != null;
+        //System.out.println(scheduleStmt);
         return scheduleResult;
     }
     public static String getUserLocale(){
@@ -233,7 +281,11 @@ public class Controller {
 
     public static ObservableList<Customer> generateCustomerList(ResultSet resultSet) throws SQLException {
         ObservableList<Customer> customerList = FXCollections.observableArrayList();
+
         while(resultSet.next()){
+            int CustomerID = resultSet.getInt("Customer_ID");
+            ResultSet customerApptQuery = getCustomerSchedule(CustomerID);
+            ObservableList<Schedule> customerApptList = generateScheduleList(customerApptQuery);
             Customer customerRow = new Customer(
                     resultSet.getInt("Customer_ID"),
                     resultSet.getString("Customer_Name"),
@@ -241,9 +293,8 @@ public class Controller {
                     resultSet.getString("Address"),
                     resultSet.getString("Division"),
                     resultSet.getString("Country"),
-                    resultSet.getInt("Postal_Code"),
-                    //THIS NEEDS TO BE FILLED WITH CUSTOMER APPTS!!
-                    FXCollections.observableArrayList()
+                    resultSet.getString("Postal_Code"),
+                    customerApptList
             );
             customerList.add(customerRow);
         }

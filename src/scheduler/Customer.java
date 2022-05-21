@@ -10,7 +10,7 @@ public class Customer {
     private String customerAddress;
     private String customerDivision;
     private String customerCountry;
-    private int customerPostal;
+    private String customerPostal;
     private ObservableList<Schedule> customerAppts = FXCollections.observableArrayList();
     public Customer(
             int customerID,
@@ -19,7 +19,7 @@ public class Customer {
             String customerAddress,
             String customerDivision,
             String customerCountry,
-            int customerPostal,
+            String customerPostal,
             ObservableList<Schedule> customerAppts
     ){
         this.customerID = customerID;
@@ -57,7 +57,7 @@ public class Customer {
         return customerCountry;
     }
 
-    public int getCustomerPostal() {
+    public String getCustomerPostal() {
         return customerPostal;
     }
 

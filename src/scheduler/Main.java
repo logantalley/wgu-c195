@@ -51,9 +51,14 @@ public class Main extends Application {
 
         System.out.println(userLocale);
         Stage mainMenu = new Stage();
-        Button btnCustomers = new Button();
-        Button btnClose = new Button();
-        Button btnSchedule = new Button();
+        Button btnCustomers = new Button("Customers");
+        Button btnSchedule = new Button("Schedule");
+        AnchorPane mainAnchor = new AnchorPane();
+        mainAnchor.getChildren().addAll(btnSchedule, btnCustomers);
+        AnchorPane.setRightAnchor(btnCustomers, 10d);
+        AnchorPane.setLeftAnchor(btnSchedule, 10d);
+        Scene mainScene = new Scene(mainAnchor, 850, 250);
+        mainMenu.setScene(mainScene);
 
         TableView<Schedule> scheduleTable = Controller.generateScheduleTable();
         TableView<Customer> customerTable = Controller.generateCustomerTable();
@@ -70,9 +75,9 @@ public class Main extends Application {
         btnSchedule.setOnAction(e -> {
             userScheduleStage.show();
         });
-        Button custAddBtn = new Button();
-        Button custModBtn = new Button();
-        Button custDelBtn = new Button();
+        Button custAddBtn = new Button("Add");
+        Button custModBtn = new Button("Modify");
+        Button custDelBtn = new Button("Delete");
 
         HBox custBtnBox = new HBox(5, custAddBtn, custModBtn, custDelBtn);
 
@@ -84,25 +89,31 @@ public class Main extends Application {
         AnchorPane.setRightAnchor(customerTable, 10d);
         AnchorPane.setLeftAnchor(customerTable, 10d);
         Stage customerStage = new Stage();
-        GridPane custGrid = new GridPane();
-        Label custLabel = new Label("Customers");
-        custGrid.add(custLabel, 0, 0, 1,1);
+        Scene customerScene = new Scene(partAnchor, 850, 250);
+        customerStage.setScene(customerScene);
+        customerStage.setTitle("Customers");
+
 
 
         btnCustomers.setOnAction(e -> {
+            ResultSet customerResult = Controller.getCustomers();
+            try {
+                ObservableList<Customer> customerList = Controller.generateCustomerList(customerResult);
+                Controller.updateTable(customerTable, customerList);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
             customerStage.show();
         });
 
 
 
-        /*ResultSet customerResult = Controller.getCustomers();
-        TableView customerTable = Controller.generateTable(customerResult);*/
 
 
         loginButton.setOnAction(e -> {
             UserIDRes.set(Controller.loginButtonHandler(usernameField, passwordField, alert));
             if (UserIDRes.get() != -1){
-                ResultSet userSchedule = Controller.getSchedule(UserIDRes.get());
+                ResultSet userSchedule = Controller.getUserSchedule(UserIDRes.get());
                 try {
                     ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
                     Controller.updateTable(scheduleTable, userList);
@@ -110,6 +121,8 @@ public class Main extends Application {
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
+                primaryStage.close();
+                mainMenu.show();
             }
         });
         root.getChildren().addAll(usernameField, passwordField, loginButton, zoneLabel);
