@@ -113,7 +113,56 @@ public class Controller {
         //System.out.println(scheduleStmt);
         return scheduleResult;
     }
+    public static ObservableList<Country> getCountries() throws SQLException {
+        String countryQuery = """
+                SELECT
+                    Country,
+                    Country_ID
+                FROM
+                    countries;
+                """;
+        JDBC.makePreparedStatement(countryQuery, JDBC.getConnection());
+        PreparedStatement countryStmt = JDBC.getPreparedStatement();
+        assert countryStmt != null;
+        ResultSet countryRes = countryStmt.executeQuery();
+        assert countryRes != null;
+        ObservableList<Country> countryList = FXCollections.observableArrayList();
+        while (countryRes.next()){
+            Country countryRow = new Country(
+                    countryRes.getString("Country"),
+                    countryRes.getInt("Country_ID")
+            );
+            countryList.add(countryRow);
+        }
+        return countryList;
+    }
 
+    public static ObservableList<Division> getDivisions(Integer countryID) throws SQLException {
+        String divisionQuery = """
+                SELECT
+                    Division,
+                    Division_ID
+                FROM
+                    first_level_divisions
+                WHERE
+                    Country_ID = ?;
+                """;
+        JDBC.makePreparedStatement(divisionQuery, JDBC.getConnection());
+        PreparedStatement divisionStmt = JDBC.getPreparedStatement();
+        assert divisionStmt != null;
+        divisionStmt.setInt(1, countryID);
+        ResultSet divisionRes = divisionStmt.executeQuery();
+        assert divisionRes != null;
+        ObservableList<Division> divisionList = FXCollections.observableArrayList();
+        while (divisionRes.next()){
+            Division divisionRow = new Division(
+                    divisionRes.getString("Division"),
+                    divisionRes.getInt("Division_ID")
+            );
+            divisionList.add(divisionRow);
+        }
+        return divisionList;
+    }
     public static ResultSet getCustomerSchedule (int CustomerID){
         String scheduleQuery = """
                 SELECT
