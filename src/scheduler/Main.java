@@ -93,6 +93,14 @@ public class Main extends Application {
         customerStage.setScene(customerScene);
         customerStage.setTitle("Customers");
 
+        custAddBtn.setOnAction(e -> {
+            try {
+                Controller.addCustomer();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
 
 
         btnCustomers.setOnAction(e -> {

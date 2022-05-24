@@ -1,18 +1,18 @@
 package scheduler;
 
 public class Country {
-    private String countryName;
-    private int countryID;
+    private static int countryID;
+    private static String countryName;
     public  Country(String countryName, int countryID){
         this.countryName = countryName;
         this.countryID = countryID;
     }
 
-    public String getCountryName() {
+    public static String getCountryName() {
         return countryName;
     }
 
-    public int getCountryID() {
+    public static int getCountryID() {
         return countryID;
     }
 }
