@@ -21,20 +21,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Main extends Application {
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws SQLException {
         AtomicInteger UserIDRes = new AtomicInteger(-1);
         AnchorPane root = new AnchorPane();
         PasswordField passwordField = new PasswordField();
         TextField usernameField = new TextField();
         Button loginButton = new Button();
         Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
-        String userLocale = Controller.getUserLocale();
+        String userLang = Controller.getUserLang();
+        ObservableList<Country> countryList = Controller.getCountries();
 
-        Label zoneLabel = new Label(userLocale);
+
+        Label zoneLabel = new Label(userLang);
 
 
-/*        String userLocale = "CAfr";*/
-        if (userLocale.equals("CAfr")) {
+        if (userLang.equals("fr")) {
             usernameField.setPromptText("Nom d'utilisateur");
             passwordField.setPromptText("Le mot de passe");
             loginButton.setText("Connexion");
@@ -49,7 +50,7 @@ public class Main extends Application {
             primaryStage.setTitle("Scheduler");
         }
 
-        System.out.println(userLocale);
+        System.out.println(userLang);
         Stage mainMenu = new Stage();
         Button btnCustomers = new Button("Customers");
         Button btnSchedule = new Button("Schedule");
@@ -95,7 +96,7 @@ public class Main extends Application {
 
         custAddBtn.setOnAction(e -> {
             try {
-                Controller.addCustomer();
+                Controller.addCustomer(countryList);
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }

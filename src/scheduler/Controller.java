@@ -1,11 +1,19 @@
 package scheduler;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.ComboBoxListCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.sql.PreparedStatement;
@@ -212,11 +220,9 @@ public class Controller {
         //System.out.println(scheduleStmt);
         return scheduleResult;
     }
-    public static String getUserLocale(){
-        String userCountry = System.getProperty("user.country");
+    public static String getUserLang(){
         String userLang = System.getProperty("user.language");
-        String userLocale = userCountry + userLang;
-        return userLocale;
+        return userLang;
     }
     public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
@@ -329,7 +335,7 @@ public class Controller {
         return customerResult;
     }
 
-    public static void addCustomer() throws SQLException {
+    public static void addCustomer(ObservableList<Country> countryList) throws SQLException {
         Stage addCustStage = new Stage();
         GridPane addCustGrid = new GridPane();
         Label sceneLabel = new Label("Add Customer");
@@ -351,14 +357,22 @@ public class Controller {
 
         Label custPhoneLabel = new Label("Phone Number");
         TextField custPhoneField = new TextField();
-        ObservableList<Country> countryList = getCountries();
+        final Country[] selectedCountry = {null};
+        ComboBox<Division> custDivision = new ComboBox<>();
+        custDivision.setDisable(true);
+        ChoiceBox<Country> custCountryBox = new ChoiceBox<>(countryList);
+        custCountryBox.setOnAction(x ->{
+            selectedCountry[0] = custCountryBox.getValue();
+            custDivision.setDisable(false);
+            try {
+                custDivision.setItems(getDivisions(selectedCountry[0].getCountryID()));
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
 
-        ComboBox custCountryBox = new ComboBox(countryList);
-        custCountryBox.setOnAction(p -> {
-            System.out.println(custCountryBox.getValue());
         });
 
-        ComboBox custDivision = new ComboBox(getDivisions(1));
+
 
         Button saveBtn = new Button("Save");
 

@@ -1,18 +1,22 @@
 package scheduler;
 
 public class Country {
-    private static int countryID;
-    private static String countryName;
+    private int countryID;
+    private String countryName;
     public  Country(String countryName, int countryID){
         this.countryName = countryName;
         this.countryID = countryID;
     }
 
-    public static String getCountryName() {
+    public String getCountryName() {
         return countryName;
     }
 
-    public static int getCountryID() {
+    public int getCountryID() {
         return countryID;
+    }
+    @Override
+    public String toString(){
+        return getCountryName();
     }
 }

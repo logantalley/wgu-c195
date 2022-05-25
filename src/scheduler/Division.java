@@ -15,5 +15,10 @@ public class Division {
     public int getDivisionID() {
         return divisionID;
     }
+
+    @Override
+    public String toString(){
+        return getDivisionName();
+    }
 }
 
