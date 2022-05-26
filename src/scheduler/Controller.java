@@ -1,24 +1,20 @@
 package scheduler;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Group;
+
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.ComboBoxListCell;
-import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 
 public class Controller {
     /**
@@ -335,7 +331,7 @@ public class Controller {
         return customerResult;
     }
 
-    public static void addCustomer(ObservableList<Country> countryList) throws SQLException {
+    public static void addCustomer(TableView customerTable, ObservableList<Country> countryList, Integer userID) throws SQLException {
         Stage addCustStage = new Stage();
         GridPane addCustGrid = new GridPane();
         Label sceneLabel = new Label("Add Customer");
@@ -357,10 +353,12 @@ public class Controller {
 
         Label custPhoneLabel = new Label("Phone Number");
         TextField custPhoneField = new TextField();
+        Label custCountryLabel = new Label("Country");
+        Label custDivisionLabel = new Label("Division");
         final Country[] selectedCountry = {null};
         ComboBox<Division> custDivision = new ComboBox<>();
         custDivision.setDisable(true);
-        ChoiceBox<Country> custCountryBox = new ChoiceBox<>(countryList);
+        ComboBox<Country> custCountryBox = new ComboBox<>(countryList);
         custCountryBox.setOnAction(x ->{
             selectedCountry[0] = custCountryBox.getValue();
             custDivision.setDisable(false);
@@ -371,10 +369,52 @@ public class Controller {
             }
 
         });
+        final Division[] selectedDivision = {null};
+        custDivision.setOnAction(x -> {
+            selectedDivision[0] = custDivision.getValue();
+
+        });
 
 
 
         Button saveBtn = new Button("Save");
+        saveBtn.setOnAction(x -> {
+            Instant instant = Instant.now();
+            java.util.Date utilDate = Date.from(instant);
+            java.sql.Date createDate = new Date(utilDate.getTime());
+
+            assert custNameField.getText() != null;
+            assert custAddressField.getText() != null;
+            assert custPostalField.getText() != null;
+            assert custPhoneField.getText() != null;
+            assert selectedDivision[0].getDivisionID() != 0;
+            String customerAddQuery = """
+                    INSERT INTO customers(Customer_Name, Phone, Address, Division_ID, Postal_Code, Create_Date, Created_By, Last_Update, Last_Updated_By)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
+            try {
+                JDBC.makePreparedStatement(customerAddQuery, JDBC.getConnection());
+                PreparedStatement customerAddStmt = JDBC.getPreparedStatement();
+                assert customerAddStmt != null;
+                customerAddStmt.setString(1, custNameField.getText());
+                customerAddStmt.setString(2, custPhoneField.getText());
+                customerAddStmt.setString(3, custAddressField.getText());
+                customerAddStmt.setInt(4, selectedDivision[0].getDivisionID());
+                customerAddStmt.setString(5, custPostalField.getText());
+                customerAddStmt.setInt(7, userID);
+                customerAddStmt.setDate(6, createDate);
+                customerAddStmt.setInt(9, userID);
+                customerAddStmt.setDate(8, createDate);
+                customerAddStmt.executeUpdate();
+                ResultSet customerResult = getCustomers();
+                ObservableList<Customer> customerList = generateCustomerList(customerResult);
+                updateTable(customerTable, customerList);
+                addCustStage.close();
+
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction(x -> {
@@ -392,7 +432,9 @@ public class Controller {
         addCustGrid.add(custPhoneField, 1, 4, 1, 1);
         addCustGrid.add(custPostalLabel, 0, 5, 1, 1);
         addCustGrid.add(custPostalField, 1, 5, 1, 1);
+        addCustGrid.add(custCountryLabel, 2, 4, 1, 1);
         addCustGrid.add(custCountryBox, 2, 5, 1, 1);
+        addCustGrid.add(custDivisionLabel, 3, 4, 1, 1);
         addCustGrid.add(custDivision, 3, 5, 1, 1);
 
         addCustGrid.add(saveBtn, 2, 7, 1, 1);

@@ -5,14 +5,11 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -96,7 +93,7 @@ public class Main extends Application {
 
         custAddBtn.setOnAction(e -> {
             try {
-                Controller.addCustomer(countryList);
+                Controller.addCustomer(customerTable, countryList, (Integer.valueOf(String.valueOf(UserIDRes))));
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
