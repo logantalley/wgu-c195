@@ -8,8 +8,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -27,6 +29,7 @@ public class Main extends Application {
         Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
         String userLang = Controller.getUserLang();
         ObservableList<Country> countryList = Controller.getCountries();
+
 
 
         Label zoneLabel = new Label(userLang);
@@ -99,6 +102,23 @@ public class Main extends Application {
             }
         });
 
+        custModBtn.setOnAction(e -> {
+            Customer selectedCustomer = customerTable.getSelectionModel().getSelectedItem();
+            try {
+                Controller.modCustomer(customerTable, countryList, (Integer.valueOf(String.valueOf(UserIDRes))), selectedCustomer);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+        custDelBtn.setOnAction(e -> {
+            Customer selectedCustomer = customerTable.getSelectionModel().getSelectedItem();
+            try {
+                Controller.delCustomer(customerTable, selectedCustomer);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
 
 
         btnCustomers.setOnAction(e -> {

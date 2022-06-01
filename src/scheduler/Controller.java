@@ -10,10 +10,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.beans.PropertyEditorManager;
+import java.sql.*;
 import java.time.Instant;
 
 public class Controller {
@@ -379,9 +377,8 @@ public class Controller {
 
         Button saveBtn = new Button("Save");
         saveBtn.setOnAction(x -> {
-            Instant instant = Instant.now();
-            java.util.Date utilDate = Date.from(instant);
-            java.sql.Date createDate = new Date(utilDate.getTime());
+            Timestamp createDate = Timestamp.from(Instant.now());
+
 
             assert custNameField.getText() != null;
             assert custAddressField.getText() != null;
@@ -402,9 +399,9 @@ public class Controller {
                 customerAddStmt.setInt(4, selectedDivision[0].getDivisionID());
                 customerAddStmt.setString(5, custPostalField.getText());
                 customerAddStmt.setInt(7, userID);
-                customerAddStmt.setDate(6, createDate);
+                customerAddStmt.setTimestamp(6, createDate);
                 customerAddStmt.setInt(9, userID);
-                customerAddStmt.setDate(8, createDate);
+                customerAddStmt.setTimestamp(8, createDate);
                 customerAddStmt.executeUpdate();
                 ResultSet customerResult = getCustomers();
                 ObservableList<Customer> customerList = generateCustomerList(customerResult);
@@ -446,6 +443,199 @@ public class Controller {
         addCustStage.setTitle("Add Customer");
         addCustStage.setScene(addCustScene);
         addCustStage.show();
+    }
+
+    public static Country lookupCountry(String countryName) throws SQLException {
+        String lookupQuery = """
+                SELECT
+                    Country_ID
+                FROM
+                    countries
+                WHERE
+                    Country = ?;
+                """;
+        JDBC.makePreparedStatement(lookupQuery, JDBC.getConnection());
+        PreparedStatement countryStmt = JDBC.getPreparedStatement();
+        assert countryStmt != null;
+        countryStmt.setString(1, countryName);
+        ResultSet countryRes = countryStmt.executeQuery();
+        if (countryRes.next()){
+            return new Country(countryName, countryRes.getInt(1));
+        }
+        return null;
+    }
+    public static Division lookupDivision(String divisionName) throws SQLException {
+        String lookupQuery = """
+                SELECT
+                    Division_ID
+                FROM
+                    first_level_divisions
+                WHERE
+                    Division = ?;
+                """;
+        JDBC.makePreparedStatement(lookupQuery, JDBC.getConnection());
+        PreparedStatement divisionStmt = JDBC.getPreparedStatement();
+        assert divisionStmt != null;
+        divisionStmt.setString(1, divisionName);
+        ResultSet divisionRes = divisionStmt.executeQuery();
+        if (divisionRes.next()){
+            return new Division(divisionName, divisionRes.getInt(1));
+        }
+        return null;
+    }
+    public static void delCustomer(TableView customerTable, Customer selectedCustomer) throws SQLException {
+        if(selectedCustomer.getCustomerAppts().size() > 0){
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Cannot delete customer with appointments!", ButtonType.OK);
+            alert.showAndWait();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete " + selectedCustomer.getCustomerName() + "?", ButtonType.YES, ButtonType.NO);
+            alert.showAndWait();
+            if (alert.getResult() == ButtonType.YES){
+                String custDelQuery = """
+                    DELETE FROM
+                        customers
+                    WHERE
+                        Customer_ID = ?
+                    """;
+                JDBC.makePreparedStatement(custDelQuery, JDBC.getConnection());
+                PreparedStatement custDelStmt = JDBC.getPreparedStatement();
+                custDelStmt.setInt(1, selectedCustomer.getCustomerID());
+                custDelStmt.executeUpdate();
+                ResultSet customerResult = getCustomers();
+                ObservableList<Customer> customerList = generateCustomerList(customerResult);
+                updateTable(customerTable, customerList);
+            }
+
+
+        }
+    }
+    public static void modCustomer(TableView customerTable, ObservableList<Country> countryList, Integer userID, Customer selectedCustomer) throws SQLException {
+        Stage modCustStage = new Stage();
+        GridPane modCustGrid = new GridPane();
+        Label sceneLabel = new Label("Modify Customer");
+        sceneLabel.setStyle("-fx-font-weight: bold;");
+
+
+        Label custIDLabel = new Label("ID");
+        TextField custIDField = new TextField(String.valueOf(selectedCustomer.getCustomerID()));
+        custIDField.setDisable(true);
+
+        Label custNameLabel = new Label("Name");
+        TextField custNameField = new TextField(selectedCustomer.getCustomerName());
+
+        Label custAddressLabel = new Label("Address");
+        TextField custAddressField = new TextField(selectedCustomer.getCustomerAddress());
+
+        Label custPostalLabel = new Label("Postal Code");
+        TextField custPostalField = new TextField(selectedCustomer.getCustomerPostal());
+
+        Label custPhoneLabel = new Label("Phone Number");
+        TextField custPhoneField = new TextField(selectedCustomer.getCustomerPhone());
+        Label custCountryLabel = new Label("Country");
+        Label custDivisionLabel = new Label("Division");
+        final Country[] selectedCountry = {null};
+        selectedCountry[0] = lookupCountry(selectedCustomer.getCustomerCountry());
+        final Division[] selectedDivision = {null};
+        selectedDivision[0] = lookupDivision(selectedCustomer.getCustomerDivision());
+        ComboBox<Division> custDivision = new ComboBox<>();
+        ComboBox<Country> custCountryBox = new ComboBox<>(countryList);
+        custCountryBox.setValue(selectedCountry[0]);
+        custDivision.setValue(selectedDivision[0]);
+        custDivision.setItems(getDivisions(selectedCountry[0].getCountryID()));
+        custCountryBox.setOnAction(x ->{
+            selectedCountry[0] = custCountryBox.getValue();
+            try {
+                custDivision.setItems(getDivisions(selectedCountry[0].getCountryID()));
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+
+        });
+
+        custDivision.setOnAction(x -> {
+            selectedDivision[0] = custDivision.getValue();
+
+        });
+
+
+
+        Button saveBtn = new Button("Save");
+        saveBtn.setOnAction(x -> {
+            Timestamp createDate = Timestamp.from(Instant.now());
+
+
+            assert custNameField.getText() != null;
+            assert custAddressField.getText() != null;
+            assert custPostalField.getText() != null;
+            assert custPhoneField.getText() != null;
+            assert selectedDivision[0].getDivisionID() != 0;
+            String customermodQuery = """
+                    UPDATE
+                        customers
+                    SET
+                        Customer_Name = ?,
+                        Phone = ?,
+                        Address = ?,
+                        Division_ID = ?,
+                        Postal_Code = ?,
+                        Last_Update = ?,
+                        Last_Updated_By = ?
+                    WHERE
+                        Customer_ID = ?;
+                    """;
+            try {
+                JDBC.makePreparedStatement(customermodQuery, JDBC.getConnection());
+                PreparedStatement customermodStmt = JDBC.getPreparedStatement();
+                assert customermodStmt != null;
+                customermodStmt.setString(1, custNameField.getText());
+                customermodStmt.setString(2, custPhoneField.getText());
+                customermodStmt.setString(3, custAddressField.getText());
+                customermodStmt.setInt(4, selectedDivision[0].getDivisionID());
+                customermodStmt.setString(5, custPostalField.getText());
+                customermodStmt.setTimestamp(6, createDate);
+                customermodStmt.setInt(7, userID);
+                customermodStmt.setInt(8, selectedCustomer.getCustomerID());
+                customermodStmt.executeUpdate();
+                ResultSet customerResult = getCustomers();
+                ObservableList<Customer> customerList = generateCustomerList(customerResult);
+                updateTable(customerTable, customerList);
+                modCustStage.close();
+
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction(x -> {
+            modCustStage.close();
+        });
+
+        modCustGrid.add(sceneLabel, 0, 0, 1, 1);
+        modCustGrid.add(custIDLabel, 0, 1, 1, 1);
+        modCustGrid.add(custIDField, 1, 1, 1, 1);
+        modCustGrid.add(custNameLabel, 0, 2, 1, 1);
+        modCustGrid.add(custNameField, 1, 2, 1, 1);
+        modCustGrid.add(custAddressLabel, 0, 3, 1, 1);
+        modCustGrid.add(custAddressField, 1, 3, 1, 1);
+        modCustGrid.add(custPhoneLabel, 0, 4, 1, 1);
+        modCustGrid.add(custPhoneField, 1, 4, 1, 1);
+        modCustGrid.add(custPostalLabel, 0, 5, 1, 1);
+        modCustGrid.add(custPostalField, 1, 5, 1, 1);
+        modCustGrid.add(custCountryLabel, 2, 4, 1, 1);
+        modCustGrid.add(custCountryBox, 2, 5, 1, 1);
+        modCustGrid.add(custDivisionLabel, 3, 4, 1, 1);
+        modCustGrid.add(custDivision, 3, 5, 1, 1);
+
+        modCustGrid.add(saveBtn, 2, 7, 1, 1);
+        modCustGrid.add(cancelBtn, 3, 7, 1, 1);
+
+
+        Scene modCustScene = new Scene(modCustGrid, 850, 250);
+
+        modCustStage.setTitle("Modify Customer");
+        modCustStage.setScene(modCustScene);
+        modCustStage.show();
     }
     public static ObservableList<Customer> generateCustomerList(ResultSet resultSet) throws SQLException {
         ObservableList<Customer> customerList = FXCollections.observableArrayList();
