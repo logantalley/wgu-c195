@@ -504,6 +504,8 @@ public class Controller {
                 ResultSet customerResult = getCustomers();
                 ObservableList<Customer> customerList = generateCustomerList(customerResult);
                 updateTable(customerTable, customerList);
+                Alert delAlert = new Alert(Alert.AlertType.INFORMATION, "Customer deleted!", ButtonType.OK);
+                delAlert.showAndWait();
             }
 
 

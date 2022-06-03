@@ -66,12 +66,23 @@ public class Main extends Application {
 
 
         Stage userScheduleStage = new Stage();
-        AnchorPane userSchedPane = new AnchorPane();
-        userSchedPane.getChildren().add(scheduleTable);
+
+
+        Button schedAddBtn = new Button("Add");
+        Button schedModBtn = new Button("Modify");
+        Button schedDelBtn = new Button("Delete");
+
+        HBox schedBtnBox = new HBox(5, schedAddBtn, schedModBtn, schedDelBtn);
+        AnchorPane userSchedPane = new AnchorPane(scheduleTable, schedBtnBox);
+        AnchorPane.setBottomAnchor(schedBtnBox, 10d);
+        AnchorPane.setRightAnchor(schedBtnBox, 10d);
+        AnchorPane.setTopAnchor(scheduleTable, 40d);
+        AnchorPane.setBottomAnchor(scheduleTable, 45d);
+        AnchorPane.setRightAnchor(scheduleTable, 10d);
+        AnchorPane.setLeftAnchor(scheduleTable, 10d);
         Scene userSchedScene = new Scene(userSchedPane, 850, 250);
         userScheduleStage.setScene(userSchedScene);
         userScheduleStage.setTitle("Schedule");
-
 
         btnSchedule.setOnAction(e -> {
             userScheduleStage.show();
