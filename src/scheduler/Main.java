@@ -84,6 +84,10 @@ public class Main extends Application {
         userScheduleStage.setScene(userSchedScene);
         userScheduleStage.setTitle("Schedule");
 
+        schedAddBtn.setOnAction(x -> {
+            Controller.addAppt();
+        });
+
         btnSchedule.setOnAction(e -> {
             userScheduleStage.show();
         });
