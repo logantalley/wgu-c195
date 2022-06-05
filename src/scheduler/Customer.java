@@ -64,5 +64,9 @@ public class Customer {
     public ObservableList<Schedule> getCustomerAppts() {
         return customerAppts;
     }
+    @Override
+    public String toString(){
+        return getCustomerName();
+    }
 }
 

@@ -66,14 +66,56 @@ public class Main extends Application {
 
 
         Stage userScheduleStage = new Stage();
+        final ToggleGroup schedView = new ToggleGroup();
+
+        RadioButton byWeek = new RadioButton("Week");
+        byWeek.setToggleGroup(schedView);
+        byWeek.setOnAction(x -> {
+            ObservableList<Schedule> scheduleList = null;
+            try {
+                scheduleList = Controller.getScheduleByTime(UserIDRes.get(), "byWeek");
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+            Controller.updateTable(scheduleTable, scheduleList);
+        });
+
+        RadioButton byMonth = new RadioButton("Month");
+        byMonth.setToggleGroup(schedView);
+        byMonth.setOnAction(x -> {
+            ObservableList<Schedule> scheduleList = null;
+            try {
+                scheduleList = Controller.getScheduleByTime(UserIDRes.get(), "byMonth");
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+            Controller.updateTable(scheduleTable, scheduleList);
+        });
+
+        RadioButton byAll = new RadioButton("All");
+        byAll.setToggleGroup(schedView);
+        byAll.setSelected(true);
+        byAll.setOnAction(x -> {
+            ObservableList<Schedule> scheduleList = null;
+            try {
+                scheduleList = Controller.getScheduleByTime(UserIDRes.get(), "all");
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+            Controller.updateTable(scheduleTable, scheduleList);
+        });
 
 
         Button schedAddBtn = new Button("Add");
         Button schedModBtn = new Button("Modify");
         Button schedDelBtn = new Button("Delete");
+        HBox viewBox = new HBox(5, byAll, byWeek, byMonth);
 
         HBox schedBtnBox = new HBox(5, schedAddBtn, schedModBtn, schedDelBtn);
-        AnchorPane userSchedPane = new AnchorPane(scheduleTable, schedBtnBox);
+        AnchorPane userSchedPane = new AnchorPane(scheduleTable, schedBtnBox, viewBox);
+        AnchorPane.setTopAnchor(viewBox, 10d);
+        AnchorPane.setLeftAnchor(viewBox, 10d);
+        AnchorPane.setRightAnchor(viewBox, 10d);
         AnchorPane.setBottomAnchor(schedBtnBox, 10d);
         AnchorPane.setRightAnchor(schedBtnBox, 10d);
         AnchorPane.setTopAnchor(scheduleTable, 40d);
@@ -85,7 +127,11 @@ public class Main extends Application {
         userScheduleStage.setTitle("Schedule");
 
         schedAddBtn.setOnAction(x -> {
-            Controller.addAppt();
+            try {
+                Controller.addAppt(UserIDRes.get());
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         });
 
         btnSchedule.setOnAction(e -> {
@@ -154,9 +200,8 @@ public class Main extends Application {
         loginButton.setOnAction(e -> {
             UserIDRes.set(Controller.loginButtonHandler(usernameField, passwordField, alert));
             if (UserIDRes.get() != -1){
-                ResultSet userSchedule = Controller.getUserSchedule(UserIDRes.get());
                 try {
-                    ObservableList<Schedule> userList = Controller.generateScheduleList(userSchedule);
+                    ObservableList<Schedule> userList = Controller.getScheduleByTime(UserIDRes.get(), "all");
                     Controller.updateTable(scheduleTable, userList);
 
                 } catch (SQLException throwables) {
