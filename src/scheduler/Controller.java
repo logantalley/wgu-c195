@@ -13,7 +13,11 @@ import org.w3c.dom.Text;
 
 import javax.xml.transform.Result;
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 
 public class Controller {
     /**
@@ -835,7 +839,7 @@ public class Controller {
 
     }
 
-    public static void addAppt(Integer userID) throws SQLException {
+    public static void addAppt(Integer userID, TableView<Schedule> scheduleTable) throws SQLException, ParseException {
         Stage apptStage = new Stage();
         GridPane apptGrid = new GridPane();
         
@@ -859,13 +863,21 @@ public class Controller {
         
         Label typeLabel = new Label("Type");
         TextField typeField = new TextField();
-        
-        Label startLabel = new Label("Start Date/Time");
+        final Date[] selectedDate = {null};
+        Label dateLabel = new Label("Date");
+        final DatePicker dateField = new DatePicker();
+        dateField.setOnAction(e -> {
+                selectedDate[0] = Date.valueOf(dateField.getValue());
+                System.out.println(selectedDate[0]);
+            });
+
+        Label startLabel = new Label("Start Time (HH:MM AM/PM format)");
         TextField startField = new TextField();
         
-        Label endLabel = new Label("End Date/Time");
+        Label endLabel = new Label("End Time (HH:MM AM/PM format)");
         TextField endField = new TextField();
-        
+        DateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
+
         Label customerLabel = new Label("Customer");
         ResultSet customerRes = getCustomers();
 
@@ -886,6 +898,23 @@ public class Controller {
         Button saveBtn = new Button("Save");
         saveBtn.setOnAction(e -> {
             Timestamp createDateTime = Timestamp.from(Instant.now());
+            Timestamp startTimeStamp = null;
+            Timestamp endTimeStamp = null;
+            try {
+                startTimeStamp = new Timestamp(defaultFormat.parse(selectedDate[0] + " " + startField.getText()).getTime());
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
+            }
+            try {
+                endTimeStamp = new Timestamp(defaultFormat.parse(selectedDate[0] + " " + endField.getText()).getTime());
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
+            }
+
+            assert startTimeStamp != null;
+            assert endTimeStamp != null;
+            System.out.println(startTimeStamp);
+
 
             String addQuery = """
                     INSERT INTO appointments(Title, Description, Location, Type, Start, End, Create_Date, Created_By, Last_Update, Last_Updated_By, Customer_ID, User_ID, Contact_ID)
@@ -908,9 +937,8 @@ public class Controller {
                 addStmt.setString(2, descField.getText());
                 addStmt.setString(3, locField.getText());
                 addStmt.setString(4, typeField.getText());
-                /* TODO: Fix the start and end fields to be Timestamp objects */
-                addStmt.setString(5, startField.getText());
-                addStmt.setString(6, endField.getText());
+                addStmt.setTimestamp(5, startTimeStamp);
+                addStmt.setTimestamp(6, endTimeStamp);
                 addStmt.setTimestamp(7, createDateTime);
                 addStmt.setInt(8, userID);
                 addStmt.setTimestamp(9, createDateTime);
@@ -918,9 +946,19 @@ public class Controller {
                 addStmt.setInt(11, selectedCustomer[0].getCustomerID());
                 addStmt.setInt(12, userID);
                 addStmt.setInt(13, selectedContact[0].getContactID());
+                addStmt.executeUpdate();
+
+                ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
+                updateTable(scheduleTable, scheduleList);
+                apptStage.close();
+
+
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
+
+
+
         });
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction(e -> {
@@ -939,10 +977,12 @@ public class Controller {
         apptGrid.add(locField, 1, 4, 1, 1);
         apptGrid.add(typeLabel, 0, 5, 1, 1);
         apptGrid.add(typeField, 1, 5, 1, 1);
-        apptGrid.add(startLabel, 0, 6, 1, 1);
-        apptGrid.add(startField, 1, 6, 1, 1);
-        apptGrid.add(endLabel, 0, 7, 1, 1);
-        apptGrid.add(endField, 1, 7, 1, 1);
+        apptGrid.add(dateLabel, 0, 6, 1, 1);
+        apptGrid.add(dateField, 1, 6, 1, 1);
+        apptGrid.add(startLabel, 0, 7, 1, 1);
+        apptGrid.add(startField, 1, 7, 1, 1);
+        apptGrid.add(endLabel, 0, 8, 1, 1);
+        apptGrid.add(endField, 1, 8, 1, 1);
         apptGrid.add(contactLabel, 2, 4, 1, 1);
         apptGrid.add(contactBox, 2, 5, 1, 1);
         apptGrid.add(customerLabel, 3, 4, 1, 1);
@@ -957,9 +997,30 @@ public class Controller {
         apptStage.setTitle("Add Appointment");
         apptStage.setScene(apptScene);
         apptStage.show();
-
-
-
-
     }
-}
+    public static void delAppt(Integer userID, TableView<Schedule> schedTable, Schedule selectedAppt) throws SQLException {
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this appointment?", ButtonType.YES, ButtonType.NO);
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES){
+            String apptDelQuery = """
+                DELETE FROM
+                    appointments
+                WHERE
+                    Appointment_ID = ?
+                """;
+            JDBC.makePreparedStatement(apptDelQuery, JDBC.getConnection());
+            PreparedStatement apptDelStmt = JDBC.getPreparedStatement();
+            assert apptDelStmt != null;
+            apptDelStmt.setInt(1, selectedAppt.getApptID());
+            apptDelStmt.executeUpdate();
+            ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
+            updateTable(schedTable, scheduleList);
+            Alert delAlert = new Alert(Alert.AlertType.INFORMATION, "Appointment deleted!", ButtonType.OK);
+            delAlert.showAndWait();
+        }
+
+
+        }
+    }
+

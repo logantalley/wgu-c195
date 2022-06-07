@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.sql.*;
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -128,7 +129,16 @@ public class Main extends Application {
 
         schedAddBtn.setOnAction(x -> {
             try {
-                Controller.addAppt(UserIDRes.get());
+                Controller.addAppt(UserIDRes.get(), scheduleTable);
+            } catch (SQLException | ParseException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+        schedDelBtn.setOnAction(e -> {
+            Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
+            try {
+                Controller.delAppt(UserIDRes.get(), scheduleTable, selectedAppt);
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
