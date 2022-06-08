@@ -144,6 +144,18 @@ public class Main extends Application {
             }
         });
 
+        schedModBtn.setOnAction(e -> {
+            Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
+            try {
+                Controller.modAppt(UserIDRes.get(), scheduleTable, selectedAppt);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
+            }
+
+        });
+
         btnSchedule.setOnAction(e -> {
             userScheduleStage.show();
         });
