@@ -10,9 +10,8 @@ import javafx.stage.Stage;
 
 import java.sql.*;
 import java.text.ParseException;
-import java.time.Instant;
+import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -29,6 +28,13 @@ public class Main extends Application {
         Button loginButton = new Button();
         Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
         String userLang = Controller.getUserLang();
+        ZoneId userZone = ZoneId.systemDefault();
+        ZoneId edtZone = ZoneId.of("America/New_York");
+        ZoneId utcZone = ZoneId.of("UTC");
+
+
+        System.out.println(userZone);
+        //System.out.println(LocalTime.now(userZone));
         ObservableList<Country> countryList = Controller.getCountries();
 
 
@@ -75,7 +81,7 @@ public class Main extends Application {
             ObservableList<Schedule> scheduleList = null;
             try {
                 scheduleList = Controller.getScheduleByTime(UserIDRes.get(), "byWeek");
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
             Controller.updateTable(scheduleTable, scheduleList);
@@ -87,7 +93,7 @@ public class Main extends Application {
             ObservableList<Schedule> scheduleList = null;
             try {
                 scheduleList = Controller.getScheduleByTime(UserIDRes.get(), "byMonth");
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
             Controller.updateTable(scheduleTable, scheduleList);
@@ -100,7 +106,7 @@ public class Main extends Application {
             ObservableList<Schedule> scheduleList = null;
             try {
                 scheduleList = Controller.getScheduleByTime(UserIDRes.get(), "all");
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
             Controller.updateTable(scheduleTable, scheduleList);
@@ -139,7 +145,7 @@ public class Main extends Application {
             Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
             try {
                 Controller.delAppt(UserIDRes.get(), scheduleTable, selectedAppt);
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
         });
@@ -198,7 +204,7 @@ public class Main extends Application {
             Customer selectedCustomer = customerTable.getSelectionModel().getSelectedItem();
             try {
                 Controller.delCustomer(customerTable, selectedCustomer);
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
         });
@@ -209,7 +215,7 @@ public class Main extends Application {
             try {
                 ObservableList<Customer> customerList = Controller.generateCustomerList(customerResult);
                 Controller.updateTable(customerTable, customerList);
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
             customerStage.show();
@@ -226,7 +232,7 @@ public class Main extends Application {
                     ObservableList<Schedule> userList = Controller.getScheduleByTime(UserIDRes.get(), "all");
                     Controller.updateTable(scheduleTable, userList);
 
-                } catch (SQLException throwables) {
+                } catch (SQLException | ParseException throwables) {
                     throwables.printStackTrace();
                 }
                 primaryStage.close();

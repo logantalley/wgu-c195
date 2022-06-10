@@ -14,6 +14,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.TimeZone;
 
 public class Controller {
     /**
@@ -216,11 +219,16 @@ public class Controller {
         return scheduleResult;
     }
     public static String getUserLang(){
-        String userLang = System.getProperty("user.language");
-        return userLang;
+        return System.getProperty("user.language");
     }
-    public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException {
+    public static TimeZone getUserTimeZone(){
+        return TimeZone.getTimeZone(ZoneId.systemDefault());
+
+    }
+    public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException, ParseException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
+        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        defaultFormat.setTimeZone(getUserTimeZone());
         while(resultSet.next()){
             Schedule scheduleRow = new Schedule(
                     resultSet.getInt("Appointment_ID"),
@@ -229,8 +237,8 @@ public class Controller {
                     resultSet.getString("Location"),
                     resultSet.getString("Contact"),
                     resultSet.getString("Type"),
-                    resultSet.getString("Start"),
-                    resultSet.getString("End"),
+                    String.valueOf(defaultFormat.parse(String.valueOf(resultSet.getTimestamp("Start")))),
+                    String.valueOf(defaultFormat.parse(String.valueOf(resultSet.getTimestamp("End")))),
                     resultSet.getInt("Customer_ID"),
                     resultSet.getInt("User_ID")
             );
@@ -409,7 +417,7 @@ public class Controller {
                 updateTable(customerTable, customerList);
                 addCustStage.close();
 
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
         });
@@ -484,7 +492,7 @@ public class Controller {
         }
         return null;
     }
-    public static void delCustomer(TableView customerTable, Customer selectedCustomer) throws SQLException {
+    public static void delCustomer(TableView customerTable, Customer selectedCustomer) throws SQLException, ParseException {
         if(selectedCustomer.getCustomerAppts().size() > 0){
             Alert alert = new Alert(Alert.AlertType.ERROR, "Cannot delete customer with appointments!", ButtonType.OK);
             alert.showAndWait();
@@ -604,7 +612,7 @@ public class Controller {
                 updateTable(customerTable, customerList);
                 modCustStage.close();
 
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
         });
@@ -640,7 +648,7 @@ public class Controller {
         modCustStage.setScene(modCustScene);
         modCustStage.show();
     }
-    public static ObservableList<Customer> generateCustomerList(ResultSet resultSet) throws SQLException {
+    public static ObservableList<Customer> generateCustomerList(ResultSet resultSet) throws SQLException, ParseException {
         ObservableList<Customer> customerList = FXCollections.observableArrayList();
 
         while(resultSet.next()){
@@ -748,7 +756,7 @@ public class Controller {
     }
 
 
-    public static ObservableList<Schedule> getScheduleByTime(int userID, String queryType) throws SQLException {
+    public static ObservableList<Schedule> getScheduleByTime(int userID, String queryType) throws SQLException, ParseException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
         String scheduleQuery = null;
         if (queryType.equals("byWeek")){
@@ -817,6 +825,8 @@ public class Controller {
         assert scheduleStmt != null;
         scheduleStmt.setInt(1, userID);
         ResultSet scheduleRes = scheduleStmt.executeQuery();
+        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        defaultFormat.setTimeZone(getUserTimeZone());
         while(scheduleRes.next()){
             Schedule scheduleRow = new Schedule(
                     scheduleRes.getInt("Appointment_ID"),
@@ -825,8 +835,8 @@ public class Controller {
                     scheduleRes.getString("Location"),
                     scheduleRes.getString("Contact"),
                     scheduleRes.getString("Type"),
-                    scheduleRes.getString("Start"),
-                    scheduleRes.getString("End"),
+                    String.valueOf(defaultFormat.parse(String.valueOf(scheduleRes.getTimestamp("Start")))),
+                    String.valueOf(defaultFormat.parse(String.valueOf(scheduleRes.getTimestamp("End")))),
                     scheduleRes.getInt("Customer_ID"),
                     scheduleRes.getInt("User_ID")
             );
@@ -950,7 +960,7 @@ public class Controller {
                 apptStage.close();
 
 
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
 
@@ -995,7 +1005,7 @@ public class Controller {
         apptStage.setScene(apptScene);
         apptStage.show();
     }
-    public static void delAppt(Integer userID, TableView<Schedule> schedTable, Schedule selectedAppt) throws SQLException {
+    public static void delAppt(Integer userID, TableView<Schedule> schedTable, Schedule selectedAppt) throws SQLException, ParseException {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this appointment?", ButtonType.YES, ButtonType.NO);
         alert.showAndWait();
@@ -1019,7 +1029,7 @@ public class Controller {
 
 
         }
-    public static Customer lookupCustomer(Integer customerID) throws SQLException {
+    public static Customer lookupCustomer(Integer customerID) throws SQLException, ParseException {
         String customerQuery =
                 """
                 SELECT
@@ -1097,6 +1107,16 @@ public class Controller {
         Label endLabel = new Label("End Time (HH:MM AM/PM format)");
         TextField endField = new TextField();
         DateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
+        Timestamp selectedStartTS = Timestamp.valueOf(selectedAppt.getApptStart());
+        Timestamp selectedEndTS = Timestamp.valueOf(selectedAppt.getApptEnd());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(getUserTimeZone());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm aa");
+        timeFormat.setTimeZone(getUserTimeZone());
+        startField.setText(timeFormat.format(selectedStartTS));
+        endField.setText(timeFormat.format(selectedEndTS));
+        dateField.setValue(LocalDate.parse(dateFormat.format(selectedStartTS)));
+
 
         Label customerLabel = new Label("Customer");
         ResultSet customerRes = getCustomers();
@@ -1176,7 +1196,7 @@ public class Controller {
                 apptStage.close();
 
 
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
             }
 
