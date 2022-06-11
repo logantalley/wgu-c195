@@ -227,7 +227,8 @@ public class Controller {
     }
     public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException, ParseException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
-        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat initialFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
         defaultFormat.setTimeZone(getUserTimeZone());
         while(resultSet.next()){
             Schedule scheduleRow = new Schedule(
@@ -237,8 +238,8 @@ public class Controller {
                     resultSet.getString("Location"),
                     resultSet.getString("Contact"),
                     resultSet.getString("Type"),
-                    String.valueOf(defaultFormat.parse(String.valueOf(resultSet.getTimestamp("Start")))),
-                    String.valueOf(defaultFormat.parse(String.valueOf(resultSet.getTimestamp("End")))),
+                    defaultFormat.format(initialFormat.parse(String.valueOf(resultSet.getTimestamp("Start")))),
+                    defaultFormat.format(initialFormat.parse(String.valueOf(resultSet.getTimestamp("End")))),
                     resultSet.getInt("Customer_ID"),
                     resultSet.getInt("User_ID")
             );
@@ -825,8 +826,10 @@ public class Controller {
         assert scheduleStmt != null;
         scheduleStmt.setInt(1, userID);
         ResultSet scheduleRes = scheduleStmt.executeQuery();
-        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat initialFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
         defaultFormat.setTimeZone(getUserTimeZone());
+
         while(scheduleRes.next()){
             Schedule scheduleRow = new Schedule(
                     scheduleRes.getInt("Appointment_ID"),
@@ -835,8 +838,8 @@ public class Controller {
                     scheduleRes.getString("Location"),
                     scheduleRes.getString("Contact"),
                     scheduleRes.getString("Type"),
-                    String.valueOf(defaultFormat.parse(String.valueOf(scheduleRes.getTimestamp("Start")))),
-                    String.valueOf(defaultFormat.parse(String.valueOf(scheduleRes.getTimestamp("End")))),
+                    defaultFormat.format(initialFormat.parse(String.valueOf(scheduleRes.getTimestamp("Start")))),
+                    defaultFormat.format(initialFormat.parse(String.valueOf(scheduleRes.getTimestamp("End")))),
                     scheduleRes.getInt("Customer_ID"),
                     scheduleRes.getInt("User_ID")
             );
@@ -1107,15 +1110,14 @@ public class Controller {
         Label endLabel = new Label("End Time (HH:MM AM/PM format)");
         TextField endField = new TextField();
         DateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
-        Timestamp selectedStartTS = Timestamp.valueOf(selectedAppt.getApptStart());
-        Timestamp selectedEndTS = Timestamp.valueOf(selectedAppt.getApptEnd());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(getUserTimeZone());
         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm aa");
         timeFormat.setTimeZone(getUserTimeZone());
-        startField.setText(timeFormat.format(selectedStartTS));
-        endField.setText(timeFormat.format(selectedEndTS));
-        dateField.setValue(LocalDate.parse(dateFormat.format(selectedStartTS)));
+        startField.setText(timeFormat.format(defaultFormat.parse(selectedAppt.getApptStart())));
+        endField.setText(timeFormat.format(defaultFormat.parse(selectedAppt.getApptEnd())));
+        dateField.setValue(LocalDate.parse(dateFormat.format(defaultFormat.parse(selectedAppt.getApptStart()))));
+        selectedDate[0] = Date.valueOf(dateField.getValue());
 
 
         Label customerLabel = new Label("Customer");
@@ -1159,37 +1161,48 @@ public class Controller {
             System.out.println(startTimeStamp);
 
 
-            String addQuery = """
-                    INSERT INTO appointments(Title, Description, Location, Type, Start, End, Create_Date, Created_By, Last_Update, Last_Updated_By, Customer_ID, User_ID, Contact_ID)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            String modQuery = """
+                    UPDATE appointments
+                    SET
+                        Title = ?,
+                        Description = ?,
+                        Location = ? ,
+                        Type = ?,
+                        Start = ?,
+                        End = ?,
+                        Last_Update = ?,
+                        Last_Updated_By = ?,
+                        Customer_ID = ?,
+                        User_ID = ?,
+                        Contact_ID = ?
+                    WHERE Appointment_ID = ?
                     """;
             try {
-                JDBC.makePreparedStatement(addQuery, JDBC.getConnection());
+                JDBC.makePreparedStatement(modQuery, JDBC.getConnection());
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
-            PreparedStatement addStmt = null;
+            PreparedStatement modStmt = null;
             try {
-                addStmt = JDBC.getPreparedStatement();
+                modStmt = JDBC.getPreparedStatement();
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
-            assert addStmt != null;
+            assert modStmt != null;
             try {
-                addStmt.setString(1, titleField.getText());
-                addStmt.setString(2, descField.getText());
-                addStmt.setString(3, locField.getText());
-                addStmt.setString(4, typeField.getText());
-                addStmt.setTimestamp(5, startTimeStamp);
-                addStmt.setTimestamp(6, endTimeStamp);
-                addStmt.setTimestamp(7, createDateTime);
-                addStmt.setInt(8, userID);
-                addStmt.setTimestamp(9, createDateTime);
-                addStmt.setInt(10, userID);
-                addStmt.setInt(11, selectedCustomer[0].getCustomerID());
-                addStmt.setInt(12, userID);
-                addStmt.setInt(13, selectedContact[0].getContactID());
-                addStmt.executeUpdate();
+                modStmt.setString(1, titleField.getText());
+                modStmt.setString(2, descField.getText());
+                modStmt.setString(3, locField.getText());
+                modStmt.setString(4, typeField.getText());
+                modStmt.setTimestamp(5, startTimeStamp);
+                modStmt.setTimestamp(6, endTimeStamp);
+                modStmt.setTimestamp(7, createDateTime);
+                modStmt.setInt(8, userID);
+                modStmt.setInt(9, selectedCustomer[0].getCustomerID());
+                modStmt.setInt(10, userID);
+                modStmt.setInt(11, selectedContact[0].getContactID());
+                modStmt.setInt(12, selectedAppt.getApptID());
+                modStmt.executeUpdate();
 
                 ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
                 updateTable(scheduleTable, scheduleList);
