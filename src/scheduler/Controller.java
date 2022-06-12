@@ -923,49 +923,80 @@ public class Controller {
 
             assert startTimeStamp != null;
             assert endTimeStamp != null;
-            System.out.println(startTimeStamp);
+            //System.out.println(startTimeStamp);
+            java.util.Date estStart = null;
+            java.util.Date estEnd = null;
 
+            SimpleDateFormat estDF = new SimpleDateFormat("HH:mm:ss");
+            estDF.setTimeZone(TimeZone.getTimeZone(ZoneId.of("America/New_York")));
+            try {
+                estStart = estDF.parse("08:00:00");
+                estEnd = estDF.parse("22:00:00");
 
-            String addQuery = """
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
+            }
+
+            try {
+                java.util.Date startCompare = estDF.parse(estDF.format(startTimeStamp));
+                java.util.Date endCompare = estDF.parse(estDF.format(endTimeStamp));
+
+                if (startCompare.after(estStart) && startCompare.before(estEnd)) {
+                    if (endCompare.after(estStart) && endCompare.before(estEnd)) {
+                        String addQuery = """
                     INSERT INTO appointments(Title, Description, Location, Type, Start, End, Create_Date, Created_By, Last_Update, Last_Updated_By, Customer_ID, User_ID, Contact_ID)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """;
-            try {
-                JDBC.makePreparedStatement(addQuery, JDBC.getConnection());
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-            PreparedStatement addStmt = null;
-            try {
-                addStmt = JDBC.getPreparedStatement();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-            assert addStmt != null;
-            try {
-                addStmt.setString(1, titleField.getText());
-                addStmt.setString(2, descField.getText());
-                addStmt.setString(3, locField.getText());
-                addStmt.setString(4, typeField.getText());
-                addStmt.setTimestamp(5, startTimeStamp);
-                addStmt.setTimestamp(6, endTimeStamp);
-                addStmt.setTimestamp(7, createDateTime);
-                addStmt.setInt(8, userID);
-                addStmt.setTimestamp(9, createDateTime);
-                addStmt.setInt(10, userID);
-                addStmt.setInt(11, selectedCustomer[0].getCustomerID());
-                addStmt.setInt(12, userID);
-                addStmt.setInt(13, selectedContact[0].getContactID());
-                addStmt.executeUpdate();
+                        try {
+                            JDBC.makePreparedStatement(addQuery, JDBC.getConnection());
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+                        PreparedStatement addStmt = null;
+                        try {
+                            addStmt = JDBC.getPreparedStatement();
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+                        assert addStmt != null;
+                        try {
+                            addStmt.setString(1, titleField.getText());
+                            addStmt.setString(2, descField.getText());
+                            addStmt.setString(3, locField.getText());
+                            addStmt.setString(4, typeField.getText());
+                            addStmt.setTimestamp(5, startTimeStamp);
+                            addStmt.setTimestamp(6, endTimeStamp);
+                            addStmt.setTimestamp(7, createDateTime);
+                            addStmt.setInt(8, userID);
+                            addStmt.setTimestamp(9, createDateTime);
+                            addStmt.setInt(10, userID);
+                            addStmt.setInt(11, selectedCustomer[0].getCustomerID());
+                            addStmt.setInt(12, userID);
+                            addStmt.setInt(13, selectedContact[0].getContactID());
+                            addStmt.executeUpdate();
 
-                ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
-                updateTable(scheduleTable, scheduleList);
-                apptStage.close();
+                            ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
+                            updateTable(scheduleTable, scheduleList);
+                            apptStage.close();
 
 
-            } catch (SQLException | ParseException throwables) {
-                throwables.printStackTrace();
+                        } catch (SQLException | ParseException throwables) {
+                            throwables.printStackTrace();
+                        }
+                    }else{
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Appointment needs to be within EST business hours!", ButtonType.OK);
+                        alert.showAndWait();
+                    }
+                }else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Appointment needs to be within EST business hours!", ButtonType.OK);
+                    alert.showAndWait();
+                }
+
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
             }
+
+
 
 
 
@@ -1156,12 +1187,32 @@ public class Controller {
                 parseException.printStackTrace();
             }
 
-            assert startTimeStamp != null;
-            assert endTimeStamp != null;
-            System.out.println(startTimeStamp);
+            java.util.Date estStart = null;
+            java.util.Date estEnd = null;
+
+            SimpleDateFormat estDF = new SimpleDateFormat("HH:mm:ss");
+            estDF.setTimeZone(TimeZone.getTimeZone(ZoneId.of("America/New_York")));
+            try {
+                estStart = estDF.parse("08:00:00");
+                estEnd = estDF.parse("22:00:00");
+
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
+            }
 
 
-            String modQuery = """
+            try {
+                java.util.Date startCompare = estDF.parse(estDF.format(startTimeStamp));
+                java.util.Date endCompare = estDF.parse(estDF.format(endTimeStamp));
+
+                if (startCompare.after(estStart) && startCompare.before(estEnd)) {
+                    if (endCompare.after(estStart) && endCompare.before(estEnd)) {
+                        assert startTimeStamp != null;
+                        assert endTimeStamp != null;
+                        System.out.println(startTimeStamp);
+
+
+                        String modQuery = """
                     UPDATE appointments
                     SET
                         Title = ?,
@@ -1177,41 +1228,56 @@ public class Controller {
                         Contact_ID = ?
                     WHERE Appointment_ID = ?
                     """;
-            try {
-                JDBC.makePreparedStatement(modQuery, JDBC.getConnection());
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-            PreparedStatement modStmt = null;
-            try {
-                modStmt = JDBC.getPreparedStatement();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-            assert modStmt != null;
-            try {
-                modStmt.setString(1, titleField.getText());
-                modStmt.setString(2, descField.getText());
-                modStmt.setString(3, locField.getText());
-                modStmt.setString(4, typeField.getText());
-                modStmt.setTimestamp(5, startTimeStamp);
-                modStmt.setTimestamp(6, endTimeStamp);
-                modStmt.setTimestamp(7, createDateTime);
-                modStmt.setInt(8, userID);
-                modStmt.setInt(9, selectedCustomer[0].getCustomerID());
-                modStmt.setInt(10, userID);
-                modStmt.setInt(11, selectedContact[0].getContactID());
-                modStmt.setInt(12, selectedAppt.getApptID());
-                modStmt.executeUpdate();
+                        try {
+                            JDBC.makePreparedStatement(modQuery, JDBC.getConnection());
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+                        PreparedStatement modStmt = null;
+                        try {
+                            modStmt = JDBC.getPreparedStatement();
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+                        assert modStmt != null;
+                        try {
+                            modStmt.setString(1, titleField.getText());
+                            modStmt.setString(2, descField.getText());
+                            modStmt.setString(3, locField.getText());
+                            modStmt.setString(4, typeField.getText());
+                            modStmt.setTimestamp(5, startTimeStamp);
+                            modStmt.setTimestamp(6, endTimeStamp);
+                            modStmt.setTimestamp(7, createDateTime);
+                            modStmt.setInt(8, userID);
+                            modStmt.setInt(9, selectedCustomer[0].getCustomerID());
+                            modStmt.setInt(10, userID);
+                            modStmt.setInt(11, selectedContact[0].getContactID());
+                            modStmt.setInt(12, selectedAppt.getApptID());
+                            modStmt.executeUpdate();
 
-                ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
-                updateTable(scheduleTable, scheduleList);
-                apptStage.close();
+                            ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
+                            updateTable(scheduleTable, scheduleList);
+                            apptStage.close();
 
 
-            } catch (SQLException | ParseException throwables) {
-                throwables.printStackTrace();
+                        } catch (SQLException | ParseException throwables) {
+                            throwables.printStackTrace();
+                        }
+
+                    }else{
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Appointment needs to be within EST business hours!", ButtonType.OK);
+                        alert.showAndWait();
+                    }
+                }else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Appointment needs to be within EST business hours!", ButtonType.OK);
+                    alert.showAndWait();
+                }
+
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
             }
+
+
 
 
 
