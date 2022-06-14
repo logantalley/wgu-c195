@@ -115,10 +115,11 @@ public class Main extends Application {
 
         Button schedAddBtn = new Button("Add");
         Button schedModBtn = new Button("Modify");
+        Button schedChangeTime = new Button("Change Time");
         Button schedDelBtn = new Button("Delete");
         HBox viewBox = new HBox(5, byAll, byWeek, byMonth);
 
-        HBox schedBtnBox = new HBox(5, schedAddBtn, schedModBtn, schedDelBtn);
+        HBox schedBtnBox = new HBox(5, schedAddBtn, schedModBtn, schedChangeTime, schedDelBtn);
         AnchorPane userSchedPane = new AnchorPane(scheduleTable, schedBtnBox, viewBox);
         AnchorPane.setTopAnchor(viewBox, 10d);
         AnchorPane.setLeftAnchor(viewBox, 10d);
@@ -154,6 +155,18 @@ public class Main extends Application {
             Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
             try {
                 Controller.modAppt(UserIDRes.get(), scheduleTable, selectedAppt);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            } catch (ParseException parseException) {
+                parseException.printStackTrace();
+            }
+
+        });
+
+        schedChangeTime.setOnAction(e -> {
+            Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
+            try {
+                Controller.modApptTime(UserIDRes.get(), scheduleTable, selectedAppt);
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             } catch (ParseException parseException) {
