@@ -8,8 +8,15 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.*;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,8 +36,7 @@ public class Main extends Application {
         Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
         String userLang = Controller.getUserLang();
         ZoneId userZone = ZoneId.systemDefault();
-        ZoneId edtZone = ZoneId.of("America/New_York");
-        ZoneId utcZone = ZoneId.of("UTC");
+
 
 
         System.out.println(userZone);
@@ -40,6 +46,7 @@ public class Main extends Application {
 
 
         Label zoneLabel = new Label(userLang);
+
 
 
         if (userLang.equals("fr")) {
@@ -61,12 +68,32 @@ public class Main extends Application {
         Stage mainMenu = new Stage();
         Button btnCustomers = new Button("Customers");
         Button btnSchedule = new Button("Schedule");
+        Button btnApptReport = new Button("Appointment Report");
+        Button btnContactReport = new Button("Contact Report");
+        Button btnCustomerReport = new Button("Customer Report");
         AnchorPane mainAnchor = new AnchorPane();
-        mainAnchor.getChildren().addAll(btnSchedule, btnCustomers);
-        AnchorPane.setRightAnchor(btnCustomers, 10d);
-        AnchorPane.setLeftAnchor(btnSchedule, 10d);
+        mainAnchor.getChildren().addAll(btnSchedule, btnCustomers, btnApptReport, btnContactReport, btnCustomerReport);
+        AnchorPane.setRightAnchor(btnCustomers, 300d);
+        AnchorPane.setTopAnchor(btnCustomers, 75d);
+        AnchorPane.setLeftAnchor(btnSchedule, 300d);
+        AnchorPane.setTopAnchor(btnSchedule, 75d);
+        AnchorPane.setLeftAnchor(btnContactReport, 200d);
+        AnchorPane.setTopAnchor(btnContactReport, 150d);
+        AnchorPane.setTopAnchor(btnApptReport, 150d);
+        AnchorPane.setRightAnchor(btnApptReport, 200d);
+        AnchorPane.setTopAnchor(btnCustomerReport, 150d);
+        AnchorPane.setRightAnchor(btnCustomerReport,375d);
+
         Scene mainScene = new Scene(mainAnchor, 850, 250);
         mainMenu.setScene(mainScene);
+
+        btnApptReport.setOnAction(e -> {
+            try {
+                Controller.showApptReport();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
 
         TableView<Schedule> scheduleTable = Controller.generateScheduleTable();
         TableView<Customer> customerTable = Controller.generateCustomerTable();
@@ -155,10 +182,8 @@ public class Main extends Application {
             Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
             try {
                 Controller.modAppt(UserIDRes.get(), scheduleTable, selectedAppt);
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
-            } catch (ParseException parseException) {
-                parseException.printStackTrace();
             }
 
         });
@@ -167,10 +192,8 @@ public class Main extends Application {
             Schedule selectedAppt = scheduleTable.getSelectionModel().getSelectedItem();
             try {
                 Controller.modApptTime(UserIDRes.get(), scheduleTable, selectedAppt);
-            } catch (SQLException throwables) {
+            } catch (SQLException | ParseException throwables) {
                 throwables.printStackTrace();
-            } catch (ParseException parseException) {
-                parseException.printStackTrace();
             }
 
         });
@@ -239,17 +262,58 @@ public class Main extends Application {
 
 
         loginButton.setOnAction(e -> {
+            PrintWriter printWriter = null;
+            try {
+                FileWriter fileWriter = new FileWriter("login_activity.txt", true);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+                printWriter = new PrintWriter(bufferedWriter);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
             UserIDRes.set(Controller.loginButtonHandler(usernameField, passwordField, alert));
             if (UserIDRes.get() != -1){
+                assert printWriter != null;
+                printWriter.println("Login Attempt: " + Instant.now() + " " + usernameField.getText() + " SUCCESS");
+                printWriter.close();
                 try {
                     ObservableList<Schedule> userList = Controller.getScheduleByTime(UserIDRes.get(), "all");
                     Controller.updateTable(scheduleTable, userList);
+                    final Boolean[] notifyAgent = {null};
+                    DateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
+                    Instant now = Instant.now();
+                    Instant soon = now.plusSeconds(900);
+                    Schedule upcomingAppt = null;
+                    for (Schedule iAppt : userList) {
+                        Timestamp iStart = new Timestamp(defaultFormat.parse(iAppt.getApptStart()).getTime());
+                        if (iStart.after(Timestamp.from(now)) && iStart.before(Timestamp.from(soon))){
+                            upcomingAppt = iAppt;
+                            notifyAgent[0] = true;
+                        } else{
+                            notifyAgent[0] = false;
+                        }
+                    }
+
+                    Alert apptAlert;
+                    if(notifyAgent[0]){
+                        assert upcomingAppt != null;
+                        apptAlert = new Alert(Alert.AlertType.INFORMATION, "Appointment within 15 minutes!\n " +
+                                "Appoinment ID: " + upcomingAppt.getApptID() + "\n"
+                                + "Appontment Time: " + upcomingAppt.getApptStart(), ButtonType.OK);
+                    } else {
+                        apptAlert = new Alert(Alert.AlertType.INFORMATION, "No appointment within 15 minutes.", ButtonType.OK);
+                    }
+                    apptAlert.showAndWait();
 
                 } catch (SQLException | ParseException throwables) {
                     throwables.printStackTrace();
                 }
                 primaryStage.close();
                 mainMenu.show();
+            } else {
+                assert printWriter != null;
+                printWriter.println("Login Attempt: " + Instant.now() + " " + usernameField.getText() + " FAILURE");
+                printWriter.close();
+
             }
         });
         root.getChildren().addAll(usernameField, passwordField, loginButton, zoneLabel);
