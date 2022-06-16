@@ -21,10 +21,11 @@ import java.util.TimeZone;
 
 public class Controller {
     /**
-     *
-     * @param usernameField passed as an input from the Login screen
-     * @param passwordField passed as an input from the Login screen
-     * @return An integer, either the matching UserID, or else -1, for error catching
+     *  This function returns a UserID integer for use in queries later.
+     * @param usernameField this is supplied via the userNameField TextField
+     * @param passwordField this is supplied via the passwordField PasswordField
+     * @param alert this is supplied so that we can return the appropriate error message
+     * @return UserID integer
      */
     public static int loginButtonHandler(TextField usernameField, PasswordField passwordField, Alert alert){
         String loginQuery = "select User_ID from users where User_Name = ? and Password = ?;";
@@ -123,6 +124,12 @@ public class Controller {
         //System.out.println(scheduleStmt);
         return scheduleResult;
     }
+
+    /**
+     * Gets a list of all Countries
+     * @return an ObservableList with all Countries for populating ComboBoxes
+     * @throws SQLException on SQL error
+     */
     public static ObservableList<Country> getCountries() throws SQLException {
         String countryQuery = """
                 SELECT
@@ -147,6 +154,12 @@ public class Controller {
         return countryList;
     }
 
+    /**
+     * Gives us a list of divisions for use in ComboBoxes
+     * @param countryID the countryID for the list of Divisions
+     * @return an ObservableList of divisions for a particular Country
+     * @throws SQLException on SQL error
+     */
     public static ObservableList<Division> getDivisions(Integer countryID) throws SQLException {
         String divisionQuery = """
                 SELECT
@@ -173,6 +186,14 @@ public class Controller {
         }
         return divisionList;
     }
+
+    /**
+     * Gives us the SQL results for a Customer's schedule
+     * This logic was actually improved upon as I continued
+     * the project, as you will see.
+     * @param CustomerID the ID of the Customer for whom you would like to see a Schedule
+     * @return ResultSet for compiling into an ObservableList
+     */
     public static ResultSet getCustomerSchedule (int CustomerID){
         String scheduleQuery = """
                 SELECT
@@ -219,13 +240,31 @@ public class Controller {
         //System.out.println(scheduleStmt);
         return scheduleResult;
     }
+
+    /**
+     * Simple function to return userLang
+     * @return the String of the System's user.language
+     */
     public static String getUserLang(){
         return System.getProperty("user.language");
     }
+
+    /**
+     * Simple function to return userTimeZone
+     * @return TimeZone of systemDefault
+     */
     public static TimeZone getUserTimeZone(){
         return TimeZone.getTimeZone(ZoneId.systemDefault());
 
     }
+
+    /**
+     * Consumes a SQL ResultSet to generate an ObservableList
+     * @param resultSet the SQL ResultSet of which you would like to generate an ObservableList
+     * @return an ObservableList for a Schedule from a ResultSet
+     * @throws SQLException on SQL error
+     * @throws ParseException on attempting to parse the dates
+     */
     public static ObservableList<Schedule> generateScheduleList(ResultSet resultSet) throws SQLException, ParseException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
         SimpleDateFormat initialFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -248,6 +287,11 @@ public class Controller {
         }
         return scheduleList;
     }
+
+    /**
+     * Simple function to generate a TableView for Appointments
+     * @return Empty TableView with Rows for Appointments
+     */
     public static TableView<Schedule> generateScheduleTable(){
         TableView <Schedule> apptTable = new TableView<>();
 
@@ -297,9 +341,20 @@ public class Controller {
 
         return apptTable;
     }
+
+    /**
+     * Simple function to set the Items in a TableView
+     * @param tableView the TableView you would like to update
+     * @param obsList the ObservableList you would like to push to the TableView
+     */
     public static void updateTable(TableView tableView, ObservableList obsList){
         tableView.setItems(obsList);
     }
+
+    /**
+     * Simple function to obtain SQL ResultSet of all Customers for ComboBox
+     * @return SQL ResultSet for consumption into ObservableList
+     */
     public static ResultSet getCustomers(){
         String customerQuery =
         """
@@ -340,6 +395,13 @@ public class Controller {
         return customerResult;
     }
 
+    /**
+     * Function to add a new Customer
+     * @param customerTable TableView CustomerTable which needs updating
+     * @param countryList the ObservableList of all Countries
+     * @param userID Integer userID who is creating a new Customer
+     * @throws SQLException on SQL Errors
+     */
     public static void addCustomer(TableView customerTable, ObservableList<Country> countryList, Integer userID) throws SQLException {
         Stage addCustStage = new Stage();
         GridPane addCustGrid = new GridPane();
@@ -456,6 +518,12 @@ public class Controller {
         addCustStage.show();
     }
 
+    /**
+     * Simple function to return Country object based upon countryName
+     * @param countryName String name of Country
+     * @return Country object
+     * @throws SQLException on SQL error
+     */
     public static Country lookupCountry(String countryName) throws SQLException {
         String lookupQuery = """
                 SELECT
@@ -475,6 +543,13 @@ public class Controller {
         }
         return null;
     }
+
+    /**
+     * Simple function to get a Divison based on divisionName
+     * @param divisionName String of division's name
+     * @return Division object
+     * @throws SQLException on SQL error
+     */
     public static Division lookupDivision(String divisionName) throws SQLException {
         String lookupQuery = """
                 SELECT
@@ -494,6 +569,14 @@ public class Controller {
         }
         return null;
     }
+
+    /**
+     * Function to delete a Customer
+     * @param customerTable TableView customerTable to be updated
+     * @param selectedCustomer Customer selectedCustomer based upon what is currently selected
+     * @throws SQLException on SQL error
+     * @throws ParseException on Date parsing
+     */
     public static void delCustomer(TableView customerTable, Customer selectedCustomer) throws SQLException, ParseException {
         if(selectedCustomer.getCustomerAppts().size() > 0){
             Alert alert = new Alert(Alert.AlertType.ERROR, "Cannot delete customer with appointments!", ButtonType.OK);
@@ -522,6 +605,15 @@ public class Controller {
 
         }
     }
+
+    /**
+     * Function to modify existing Customer
+     * @param customerTable TableView customerTable to be updated
+     * @param countryList ObservableList of all Countries
+     * @param userID Integer userID of user updating customer
+     * @param selectedCustomer Customer selectedCustomer based upon Customer selected on TableView
+     * @throws SQLException on SQL error
+     */
     public static void modCustomer(TableView customerTable, ObservableList<Country> countryList, Integer userID, Customer selectedCustomer) throws SQLException {
         Stage modCustStage = new Stage();
         GridPane modCustGrid = new GridPane();
@@ -650,6 +742,14 @@ public class Controller {
         modCustStage.setScene(modCustScene);
         modCustStage.show();
     }
+
+    /**
+     * Function to retrieve a list of Customers
+     * @param resultSet ResultSet resultSet to be consumed by function
+     * @return ObservableList of Customers
+     * @throws SQLException on SQL error
+     * @throws ParseException on Date parsing
+     */
     public static ObservableList<Customer> generateCustomerList(ResultSet resultSet) throws SQLException, ParseException {
         ObservableList<Customer> customerList = FXCollections.observableArrayList();
 
@@ -671,6 +771,11 @@ public class Controller {
         }
         return customerList;
     }
+
+    /**
+     * Simple function to generate a TableView for displaying a list of Customers
+     * @return Empty TableView for Customers
+     */
     public static TableView<Customer> generateCustomerTable(){
         TableView <Customer> customerTable = new TableView<>();
 
@@ -708,6 +813,12 @@ public class Controller {
 
         return customerTable;
     }
+
+    /**
+     * Simple function to create list of Contacts for ComboBox
+     * @return ObservableList contactList of all Contacts
+     * @throws SQLException on SQL error
+     */
     public static ObservableList<Contact> getContactList() throws SQLException {
         ObservableList<Contact> contactList = FXCollections.observableArrayList();
         String allContactQuery = """
@@ -732,6 +843,12 @@ public class Controller {
         return contactList;
     }
 
+    /**
+     * Simple function to look up a Contact by name
+     * @param contactName String name of Contact
+     * @return Contact object based on their Contact_Name
+     * @throws SQLException on SQL error
+     */
     public static Contact lookupContact(String contactName) throws SQLException {
 
         String lookupContactQuery = """
@@ -757,7 +874,15 @@ public class Controller {
         return null;
     }
 
-
+    /**
+     * getScheduleByTime was my favorite function to write. In many ways,
+     * it is the culmination of my Java learning.
+     * @param userID Integer of user for whom a Schedule is needed
+     * @param queryType String to specify what grouping of time is needed
+     * @return ObservableList scheduleList based upon the queryType
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
     public static ObservableList<Schedule> getScheduleByTime(int userID, String queryType) throws SQLException, ParseException {
         ObservableList<Schedule> scheduleList = FXCollections.observableArrayList();
         String scheduleQuery = null;
@@ -850,6 +975,17 @@ public class Controller {
 
     }
 
+    /**
+     * Function to add an Appointment.
+     * LAMBDA EXPRESSION in cancelBtn.setOnAction():
+     * This lambda expression is very simple and allows me
+     * to immediately close my Stage on the cancelBtn being
+     * clicked, rather than having to create an EventHandler.
+     * @param userID Integer ID of user who is adding Appt
+     * @param scheduleTable TableView scheduleTable for updating
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
     public static void addAppt(Integer userID, TableView<Schedule> scheduleTable) throws SQLException, ParseException {
         Stage apptStage = new Stage();
         GridPane apptGrid = new GridPane();
@@ -1028,12 +1164,7 @@ public class Controller {
 
         });
         Button cancelBtn = new Button("Cancel");
-        /**
-         * LAMBDA EXPRESSION:
-         * This lambda expression is very simple and allows me
-         * to immediately close my Stage on the cancelBtn being
-         * clicked, rather than having to create an EventHandler.
-         */
+
         cancelBtn.setOnAction(e -> {
             apptStage.close();
         });
@@ -1071,6 +1202,15 @@ public class Controller {
         apptStage.setScene(apptScene);
         apptStage.show();
     }
+
+    /**
+     * Function to delete an Appointment
+     * @param userID Integer ID of user who is deleting Appointment
+     * @param schedTable TableView schedTable for updating
+     * @param selectedAppt Schedule selectedAppt from the selected item on the TableView
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
     public static void delAppt(Integer userID, TableView<Schedule> schedTable, Schedule selectedAppt) throws SQLException, ParseException {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this appointment?", ButtonType.YES, ButtonType.NO);
@@ -1095,6 +1235,14 @@ public class Controller {
 
 
         }
+
+    /**
+     * Function to return Customer based upon ID
+     * @param customerID Integer of Customer to look up
+     * @return Customer object based upon their ID
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
     public static Customer lookupCustomer(Integer customerID) throws SQLException, ParseException {
         String customerQuery =
                 """
@@ -1134,6 +1282,20 @@ public class Controller {
         }
         return null;
     }
+
+    /**
+     * Function to modify an Appointment
+     * LAMBDA EXPRESSION in dateField.setOnAction():
+     * I heavily utilize lambdas in my code, but this is a clear
+     * and succinct example of how useful they are. Rather than
+     * creating an EventHandler, I can simply use a lambda to immediately
+     * set my value on the setOnAction listener.
+     * @param userID Integer ID of User who is modifying Appointment
+     * @param scheduleTable TableView scheduleTable for updating
+     * @param selectedAppt Schedule selectedAppt from selected item on TableView
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
     public static void modAppt(Integer userID, TableView<Schedule> scheduleTable, Schedule selectedAppt) throws SQLException, ParseException {
         Stage apptStage = new Stage();
         GridPane apptGrid = new GridPane();
@@ -1163,13 +1325,7 @@ public class Controller {
         final Date[] selectedDate = {null};
         Label dateLabel = new Label("Date");
         final DatePicker dateField = new DatePicker();
-        /**
-         * LAMBDA EXPRESSION:
-         * I heavily utilize lambdas in my code, but this is a clear
-         * and succinct example of how useful they are. Rather than
-         * creating an EventHandler, I can simply use a lambda to immediately
-         * set my value on the setOnAction listener.
-         */
+
         dateField.setOnAction(e -> {
             selectedDate[0] = Date.valueOf(dateField.getValue());
         });
@@ -1382,6 +1538,14 @@ public class Controller {
         apptStage.show();
     }
 
+    /**
+     * Function to modify only the time of an Appt
+     * @param userID Integer ID of User modifying  Appt
+     * @param scheduleTable TableView scheduleTable for updating
+     * @param selectedAppt Schedule selectedAppt from object selected on TableView
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
     public static void modApptTime(Integer userID, TableView<Schedule> scheduleTable, Schedule selectedAppt) throws SQLException, ParseException {
         Stage apptStage = new Stage();
         GridPane apptGrid = new GridPane();
@@ -1624,6 +1788,10 @@ public class Controller {
         apptStage.show();
     }
 
+    /**
+     * Function to show the report for count of Appointments by Type
+     * @throws SQLException on SQL error
+     */
     public static void showApptReport() throws SQLException {
         TableView <apptReport> apptReportTable = new TableView<>();
 
@@ -1671,50 +1839,149 @@ public class Controller {
 
     }
 
-    public static void showContactReport() throws SQLException {
-        TableView <apptReport> apptReportTable = new TableView<>();
+    /**
+     * Function to grab list of Contact Appointments
+     * @param contactID Integer ID of Contact for whom to find Appointments
+     * @return ObservableList contactApptList of Appointments corresponding to a Contact
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
+    public static ObservableList<Schedule> getContactAppts(int contactID) throws SQLException, ParseException {
+        ObservableList<Schedule> contactApptList = FXCollections.observableArrayList();
+        String contactApptQuery = """
+                    SELECT
+                        Appointment_ID,
+                        Title,
+                        Description,
+                        Location,
+                        contacts.Contact_Name as Contact,
+                        Type,
+                        Start,
+                        End,
+                        Customer_ID,
+                        User_ID
+                    FROM
+                        appointments
+                        INNER JOIN contacts on appointments.Contact_ID = contacts.Contact_ID
+                    WHERE
+                    	appointments.Contact_ID = ?;
+                """;
+        JDBC.makePreparedStatement(contactApptQuery, JDBC.getConnection());
+        PreparedStatement contactApptStmt = JDBC.getPreparedStatement();
+        assert contactApptStmt != null;
+        contactApptStmt.setInt(1, contactID);
+        SimpleDateFormat initialFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
+        defaultFormat.setTimeZone(getUserTimeZone());
+        ResultSet contactApptRes = contactApptStmt.executeQuery();
+        while(contactApptRes.next()){
+            Schedule scheduleRow = new Schedule(
+                    contactApptRes.getInt("Appointment_ID"),
+                    contactApptRes.getString("Title"),
+                    contactApptRes.getString("Description"),
+                    contactApptRes.getString("Location"),
+                    contactApptRes.getString("Contact"),
+                    contactApptRes.getString("Type"),
+                    defaultFormat.format(initialFormat.parse(String.valueOf(contactApptRes.getTimestamp("Start")))),
+                    defaultFormat.format(initialFormat.parse(String.valueOf(contactApptRes.getTimestamp("End")))),
+                    contactApptRes.getInt("Customer_ID"),
+                    contactApptRes.getInt("User_ID")
+            );
+            contactApptList.add(scheduleRow);
+        }
+        return contactApptList;
 
-        TableColumn timeFrame = new TableColumn("Timeframe");
-        timeFrame.setCellValueFactory(new PropertyValueFactory<apptReport, String>("timeFrame"));
 
-        TableColumn apptType = new TableColumn("Type");
-        apptType.setCellValueFactory(new PropertyValueFactory<apptReport, String>("apptType"));
+    }
 
-        TableColumn apptCount = new TableColumn("Count");
-        apptCount.setCellValueFactory(new PropertyValueFactory<apptReport, Integer>("apptCount"));
+    /**
+     * Function to show report of list of Appointments by Contact
+     * @throws SQLException on SQL error
+     * @throws ParseException on parsing Dates
+     */
+    public static void showContactReport() throws SQLException, ParseException {
+        TableView<Schedule> contactReportTable = generateScheduleTable();
+        ObservableList<Contact> contactList = getContactList();
+        Contact[] selectedContact = {null};
+        ComboBox<Contact> contactBox = new ComboBox<>(contactList);
+        contactBox.setValue(contactList.get(0));
+        selectedContact[0] = contactBox.getValue();
 
-        apptReportTable.getColumns().addAll(timeFrame, apptType, apptCount);
+        updateTable(contactReportTable, getContactAppts(selectedContact[0].getContactID()));
+        contactBox.setOnAction(e -> {
+            selectedContact[0] = contactBox.getValue();
+            try {
+                updateTable(contactReportTable, getContactAppts(selectedContact[0].getContactID()));
+            } catch (SQLException | ParseException throwables) {
+                throwables.printStackTrace();
+            }
+        });
 
-        String apptReportQuery = """
-                SELECT DATE_FORMAT(Start, "%Y-%m") as Timeframe, Type, count(Appointment_ID) as Count
-                FROM appointments
-                GROUP BY Type, DATE_FORMAT(Start, "%Y%m");
+        AnchorPane contactReportAnchor = new AnchorPane(contactReportTable, contactBox);
+        AnchorPane.setTopAnchor(contactReportTable, 40d);
+        AnchorPane.setBottomAnchor(contactReportTable, 45d);
+        AnchorPane.setRightAnchor(contactReportTable, 10d);
+        AnchorPane.setLeftAnchor(contactReportTable, 10d);
+        AnchorPane.setTopAnchor(contactBox, 10d);
+        AnchorPane.setRightAnchor(contactBox, 10d);
+        Stage contactReportStage = new Stage();
+        Scene contactReportScene = new Scene(contactReportAnchor, 850, 250);
+        contactReportStage.setScene(contactReportScene);
+        contactReportStage.setTitle("Appointments by Contact");
+        contactReportStage.show();
+
+    }
+
+    /**
+     * Function to show report of Customers by Country
+     * @throws SQLException on SQL error
+     */
+    public static void showCustomerReport() throws SQLException {
+        TableView <customerReport> customerReportTable = new TableView<>();
+
+        TableColumn countryName = new TableColumn("Country");
+        countryName.setCellValueFactory(new PropertyValueFactory<apptReport, String>("countryName"));
+
+        TableColumn customerCount = new TableColumn("Count");
+        customerCount.setCellValueFactory(new PropertyValueFactory<apptReport, Integer>("customerCount"));
+
+        customerReportTable.getColumns().addAll(countryName, customerCount);
+
+        String custReportQuery = """
+                SELECT
+                    countries.Country,
+                    count(customers.Customer_ID) as Count
+                FROM
+                    customers
+                        INNER JOIN first_level_divisions on customers.Division_ID = first_level_divisions.Division_ID
+                            INNER JOIN countries on first_level_divisions.Country_ID = countries.Country_ID
+                GROUP BY
+                    countries.Country;
                 """;
 
-        JDBC.makePreparedStatement(apptReportQuery, JDBC.getConnection());
-        PreparedStatement apptReportStmt = JDBC.getPreparedStatement();
-        ResultSet apptReportRes = apptReportStmt.executeQuery();
-        ObservableList<apptReport> apptReportObservableList = FXCollections.observableArrayList();
-        while (apptReportRes.next()){
-            apptReport apptReportRow = new apptReport(
-                    apptReportRes.getString("Timeframe"),
-                    apptReportRes.getString("Type"),
-                    apptReportRes.getInt("Count")
+        JDBC.makePreparedStatement(custReportQuery, JDBC.getConnection());
+        PreparedStatement custReportStmt = JDBC.getPreparedStatement();
+        ResultSet custReportRes = custReportStmt.executeQuery();
+        ObservableList<customerReport> custReportObservableList = FXCollections.observableArrayList();
+        while (custReportRes.next()){
+            customerReport custReportRow = new customerReport(
+                    custReportRes.getString("Country"),
+                    custReportRes.getInt("Count")
             );
-            apptReportObservableList.add(apptReportRow);
+            custReportObservableList.add(custReportRow);
         }
-        apptReportTable.setItems(apptReportObservableList);
+        customerReportTable.setItems(custReportObservableList);
 
-        AnchorPane apptReportAnchor = new AnchorPane(apptReportTable);
-        AnchorPane.setTopAnchor(apptReportTable, 40d);
-        AnchorPane.setBottomAnchor(apptReportTable, 45d);
-        AnchorPane.setRightAnchor(apptReportTable, 10d);
-        AnchorPane.setLeftAnchor(apptReportTable, 10d);
-        Stage apptReportStage = new Stage();
-        Scene apptReportScene = new Scene(apptReportAnchor, 850, 250);
-        apptReportStage.setScene(apptReportScene);
-        apptReportStage.setTitle("Appointments by Type");
-        apptReportStage.show();
+        AnchorPane custReportAnchor = new AnchorPane(customerReportTable);
+        AnchorPane.setTopAnchor(customerReportTable, 40d);
+        AnchorPane.setBottomAnchor(customerReportTable, 45d);
+        AnchorPane.setRightAnchor(customerReportTable, 10d);
+        AnchorPane.setLeftAnchor(customerReportTable, 10d);
+        Stage custReportStage = new Stage();
+        Scene custReportScene = new Scene(custReportAnchor, 850, 250);
+        custReportStage.setScene(custReportScene);
+        custReportStage.setTitle("Count of Customers by Country");
+        custReportStage.show();
 
     }
 }

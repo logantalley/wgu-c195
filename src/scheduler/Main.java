@@ -22,11 +22,13 @@ import java.time.ZoneId;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-/**
- * This is the main function
- */
+
 public class Main extends Application {
     @Override
+    /**
+     * This is the main function where we call all of our functions in
+     * the Controller class.
+     */
     public void start(Stage primaryStage) throws SQLException {
         AtomicInteger UserIDRes = new AtomicInteger(-1);
         AnchorPane root = new AnchorPane();
@@ -90,6 +92,22 @@ public class Main extends Application {
         btnApptReport.setOnAction(e -> {
             try {
                 Controller.showApptReport();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+        btnContactReport.setOnAction(e -> {
+            try {
+                Controller.showContactReport();
+            } catch (SQLException | ParseException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+        btnCustomerReport.setOnAction(e -> {
+            try {
+                Controller.showCustomerReport();
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
