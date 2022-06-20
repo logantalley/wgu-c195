@@ -16,9 +16,10 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -37,7 +38,7 @@ public class Main extends Application {
         Button loginButton = new Button();
         Alert alert = new Alert(Alert.AlertType.ERROR, "Bad username/password combo!", ButtonType.OK);
         String userLang = Controller.getUserLang();
-        ZoneId userZone = ZoneId.systemDefault();
+        String userZone = TimeZone.getTimeZone(ZoneId.systemDefault()).getDisplayName();
 
 
 
@@ -47,7 +48,7 @@ public class Main extends Application {
 
 
 
-        Label zoneLabel = new Label(userLang);
+        Label zoneLabel = new Label(userLang + "-" + userZone);
 
 
 
@@ -298,12 +299,19 @@ public class Main extends Application {
                     Controller.updateTable(scheduleTable, userList);
                     final Boolean[] notifyAgent = {null};
                     DateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm aa");
-                    Instant now = Instant.now();
-                    Instant soon = now.plusSeconds(900);
+
+                    Timestamp now = Timestamp.from(Instant.now());
+                    Timestamp soon = Timestamp.from(Instant.now().plusSeconds(900));
+
+                    Timestamp localNow = new Timestamp(defaultFormat.parse(defaultFormat.format(now)).getTime());
+                    Timestamp localSoon = new Timestamp(defaultFormat.parse(defaultFormat.format(soon)).getTime());
+
+
+
                     Schedule upcomingAppt = null;
                     for (Schedule iAppt : userList) {
                         Timestamp iStart = new Timestamp(defaultFormat.parse(iAppt.getApptStart()).getTime());
-                        if (iStart.after(Timestamp.from(now)) && iStart.before(Timestamp.from(soon))){
+                        if (iStart.after(localNow) && iStart.before(localSoon)){
                             upcomingAppt = iAppt;
                             notifyAgent[0] = true;
                         } else{
@@ -314,7 +322,7 @@ public class Main extends Application {
                     Alert apptAlert;
                     if(notifyAgent[0]){
                         assert upcomingAppt != null;
-                        apptAlert = new Alert(Alert.AlertType.INFORMATION, "Appointment within 15 minutes!\n " +
+                        apptAlert = new Alert(Alert.AlertType.INFORMATION, "Appointment within 15 minutes!\n" +
                                 "Appoinment ID: " + upcomingAppt.getApptID() + "\n"
                                 + "Appontment Time: " + upcomingAppt.getApptStart(), ButtonType.OK);
                     } else {

@@ -1082,17 +1082,15 @@ public class Controller {
                         ResultSet customerApptQuery = getCustomerSchedule(selectedCustomer[0].getCustomerID());
                         ObservableList<Schedule> customerApptList = generateScheduleList(customerApptQuery);
                         final Boolean[] breakLoop = {null};
+                        breakLoop[0] = true;
                         for (Schedule iSchedule : customerApptList) {
                             Timestamp iStart = new Timestamp(defaultFormat.parse(iSchedule.getApptStart()).getTime());
                             Timestamp iStop = new Timestamp(defaultFormat.parse(iSchedule.getApptEnd()).getTime());
                             if (startTimeStamp.before(iStop) && iStart.before(endTimeStamp)){
-                                if (startTimeStamp.equals(iStart)){
-                                    breakLoop[0] = true;
-                                } else {
-                                    Alert alert = new Alert(Alert.AlertType.ERROR, "Overlapping Appointments!", ButtonType.OK);
-                                    alert.showAndWait();
-                                    breakLoop[0] = false;
-                                }
+                                Alert alert = new Alert(Alert.AlertType.ERROR, "Overlapping Appointments!", ButtonType.OK);
+                                alert.showAndWait();
+                                breakLoop[0] = false;
+
                                 break;
 
                             } else {
@@ -1407,13 +1405,16 @@ public class Controller {
                         ResultSet customerApptQuery = getCustomerSchedule(selectedAppt.getCustomerID());
                         ObservableList<Schedule> customerApptList = generateScheduleList(customerApptQuery);
                         final Boolean[] breakLoop = {null};
+                        breakLoop[0] = true;
                         for (Schedule iSchedule : customerApptList) {
                             Timestamp iStart = new Timestamp(defaultFormat.parse(iSchedule.getApptStart()).getTime());
                             System.out.println(iStart);
                             Timestamp iStop = new Timestamp(defaultFormat.parse(iSchedule.getApptEnd()).getTime());
                             System.out.println(iStop);
                             if (startTimeStamp.before(iStop) && iStart.before(endTimeStamp)){
-                                breakLoop[0] = startTimeStamp.equals(iStart);
+                                if (startTimeStamp.equals(iStart)){
+                                    breakLoop[0] = selectedAppt.getApptID() == iSchedule.getApptID();
+                                }
                                 break;
 
                             } else {
@@ -1657,12 +1658,15 @@ public class Controller {
                         System.out.println(selectedAppt.getCustomerID());
                         ObservableList<Schedule> customerApptList = generateScheduleList(customerApptQuery);
                         final Boolean[] breakLoop = {null};
+                        breakLoop[0] = true;
                         for (Schedule iSchedule : customerApptList) {
                             Timestamp iStart = new Timestamp(defaultFormat.parse(iSchedule.getApptStart()).getTime());
                             Timestamp iStop = new Timestamp(defaultFormat.parse(iSchedule.getApptEnd()).getTime());
                             if (startTimeStamp.before(iStop) && iStart.before(endTimeStamp)){
                                 if (startTimeStamp.equals(iStart)){
-                                    breakLoop[0] = true;
+                                    if (selectedAppt.getApptID() == iSchedule.getApptID()){
+                                        breakLoop[0] = true;
+                                    }
                                 } else {
                                     Alert alert = new Alert(Alert.AlertType.ERROR, "Overlapping Appointments!", ButtonType.OK);
                                     alert.showAndWait();

@@ -9,6 +9,7 @@ Date: 06/15/2022
 IDE Version: IntelliJ IDEA 2021.1.3 (Community Edition)
 JDK Version: Java SE 17.0.1
 JavaFX Version: JavaFX-SDK-17.0.1
+MySQL Connector Version: mysql-connector-java-8.0.25
 Directions:
     - Compile source code
     - Run the compiled .jar
