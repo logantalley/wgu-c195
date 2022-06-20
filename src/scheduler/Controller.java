@@ -1227,7 +1227,7 @@ public class Controller {
             apptDelStmt.executeUpdate();
             ObservableList<Schedule> scheduleList = Controller.getScheduleByTime(userID, "all");
             updateTable(schedTable, scheduleList);
-            Alert delAlert = new Alert(Alert.AlertType.INFORMATION, "Appointment deleted!", ButtonType.OK);
+            Alert delAlert = new Alert(Alert.AlertType.INFORMATION, "Appointment deleted! \n" + "Appointment ID: " + selectedAppt.getApptID() + "\n" + "Appointment Title: " + selectedAppt.getApptTitle() + "\n" + "Appointment Type: " + selectedAppt.getApptType(), ButtonType.OK);
             delAlert.showAndWait();
         }
 
