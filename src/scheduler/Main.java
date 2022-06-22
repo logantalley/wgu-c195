@@ -306,6 +306,8 @@ public class Main extends Application {
                     Timestamp localNow = new Timestamp(defaultFormat.parse(defaultFormat.format(now)).getTime());
                     Timestamp localSoon = new Timestamp(defaultFormat.parse(defaultFormat.format(soon)).getTime());
 
+                    System.out.println(localNow);
+                    System.out.println(localSoon);
 
 
                     Schedule upcomingAppt = null;
@@ -315,7 +317,10 @@ public class Main extends Application {
                             upcomingAppt = iAppt;
                             notifyAgent[0] = true;
                         } else{
-                            notifyAgent[0] = false;
+                            if (notifyAgent[0] == null){
+                                notifyAgent[0] = false;
+
+                            }
                         }
                     }
 
